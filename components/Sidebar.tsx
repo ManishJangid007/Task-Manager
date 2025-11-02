@@ -15,30 +15,38 @@ interface SidebarProps {
   onEditProject: (project: Project) => void;
   onDeleteProject: (projectId: string) => void;
   onQuickAddTask: () => void;
+  includeCompletedTasks: boolean;
   isOpen?: boolean;
   onClose?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ projects, tasks, view, setView, onAddProject, onEditProject, onDeleteProject, onQuickAddTask, isOpen, onClose }) => {
+const Sidebar: React.FC<SidebarProps> = ({ projects, tasks, view, setView, onAddProject, onEditProject, onDeleteProject, onQuickAddTask, includeCompletedTasks, isOpen, onClose }) => {
     const activeProject = typeof view === 'object' && view.type === 'project' ? view.id : null;
 
     const today = getTodayDateString();
     
+    // Filter tasks based on includeCompletedTasks setting
+    const filteredTasks = useMemo(() => {
+        return includeCompletedTasks 
+            ? tasks 
+            : tasks.filter(task => !task.isCompleted);
+    }, [tasks, includeCompletedTasks]);
+    
     // Count all today's tasks across all projects
     const todaysTaskCount = useMemo(() => {
-        return tasks.filter(task => task.date === today).length;
-    }, [tasks, today]);
+        return filteredTasks.filter(task => task.date === today).length;
+    }, [filteredTasks, today]);
 
     // Count today's tasks for each project
     const projectTodayCounts = useMemo(() => {
         const counts: Record<string, number> = {};
         projects.forEach(project => {
-            counts[project.id] = tasks.filter(
+            counts[project.id] = filteredTasks.filter(
                 task => task.projectId === project.id && task.date === today
             ).length;
         });
         return counts;
-    }, [projects, tasks, today]);
+    }, [projects, filteredTasks, today]);
 
   return (
     <>

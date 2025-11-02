@@ -1,12 +1,16 @@
 import React, { useRef } from 'react';
 import { ArrowDownTrayIcon, ArrowUpTrayIcon } from './Icons';
+import { Switch } from './ui/switch';
+import { Label } from './ui/label';
 
 interface SettingsViewProps {
   onExport: () => void;
   onImport: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  includeCompletedTasks: boolean;
+  onIncludeCompletedTasksChange: (value: boolean) => void;
 }
 
-const SettingsView: React.FC<SettingsViewProps> = ({ onExport, onImport }) => {
+const SettingsView: React.FC<SettingsViewProps> = ({ onExport, onImport, includeCompletedTasks, onIncludeCompletedTasksChange }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImportClick = () => {
@@ -18,6 +22,25 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onExport, onImport }) => {
       <h2 className="text-3xl font-bold text-foreground">Settings</h2>
 
       <div className="space-y-4">
+        <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
+          <h3 className="text-xl font-semibold text-foreground mb-4">Sidebar Preferences</h3>
+          <div className="flex items-center justify-between mb-6">
+            <div className="space-y-0.5">
+              <Label htmlFor="include-completed" className="text-sm font-medium text-foreground">
+                Include completed tasks in sidebar counts
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                When enabled, sidebar task counts include all tasks. When disabled, only incomplete tasks are counted.
+              </p>
+            </div>
+            <Switch
+              id="include-completed"
+              checked={includeCompletedTasks}
+              onCheckedChange={onIncludeCompletedTasksChange}
+            />
+          </div>
+        </div>
+
         <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
           <h3 className="text-xl font-semibold text-foreground mb-4">Data Management</h3>
           <p className="text-muted-foreground mb-6">
