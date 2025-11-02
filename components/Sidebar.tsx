@@ -2,6 +2,7 @@
 import React, { useRef } from 'react';
 import { Project, View } from '../types';
 import { PlusIcon, CalendarDaysIcon, ChartBarIcon, FolderIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, PencilIcon, TrashIcon } from './Icons';
+import { ThemeToggle } from './ui/theme-toggle';
 
 interface SidebarProps {
   projects: Project[];
@@ -24,8 +25,11 @@ const Sidebar: React.FC<SidebarProps> = ({ projects, view, setView, onAddProject
     };
 
   return (
-    <aside className="w-full md:w-64 lg:w-72 bg-white dark:bg-gray-800 p-4 space-y-6 flex flex-col h-screen shadow-md">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Task Manager</h1>
+    <aside className="w-full md:w-64 lg:w-72 bg-card border-r border-border p-4 space-y-6 flex flex-col h-screen shadow-md">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-foreground">Task Manager</h1>
+        <ThemeToggle />
+      </div>
       
       <nav className="space-y-2">
         <button
