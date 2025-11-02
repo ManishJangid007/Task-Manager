@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Project, Task, ReportPeriod } from '../types';
 import { getDateRange } from '../utils/dateUtils';
+import { Select } from './ui/select';
 
 interface ReportsViewProps {
   tasks: Task[];
@@ -28,20 +29,24 @@ const ReportsView: React.FC<ReportsViewProps> = ({ tasks, projects }) => {
     return projectCounts.filter(p => p.tasks > 0).sort((a,b) => b.tasks - a.tasks);
   }, [tasks, projects, period]);
 
+  const periodOptions = [
+    { value: 'day', label: 'This Day' },
+    { value: 'week', label: 'This Week' },
+    { value: 'month', label: 'This Month' },
+    { value: 'year', label: 'This Year' },
+  ];
+
   return (
     <div className="p-6 space-y-6">
-      <h2 className="text-3xl font-bold text-foreground">Reports</h2>
-
-      <div className="flex space-x-2 bg-muted p-1 rounded-lg">
-        {(['day', 'week', 'month', 'year'] as ReportPeriod[]).map(p => (
-          <button
-            key={p}
-            onClick={() => setPeriod(p)}
-            className={`w-full px-3 py-1.5 text-sm font-medium rounded-md transition-colors capitalize ${period === p ? 'bg-primary text-primary-foreground shadow' : 'text-foreground/80 hover:bg-muted'}`}
-          >
-            This {p}
-          </button>
-        ))}
+      <div className="flex justify-between items-center">
+        <h2 className="text-3xl font-bold text-foreground">Reports</h2>
+        <Select
+          value={period}
+          onChange={(value) => setPeriod(value as ReportPeriod)}
+          options={periodOptions}
+          placeholder="Select period"
+          className="w-[180px]"
+        />
       </div>
 
       <div className="bg-card p-4 rounded-lg shadow h-96 border border-border">
