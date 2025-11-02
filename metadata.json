@@ -1,5 +1,5 @@
 {
-  "name": "Gemini Task Manager",
+  "name": "Task Manager",
   "description": "A comprehensive task manager to organize projects and daily tasks. Features include project management, day-wise task views, reporting on project activity, and data import/export, all stored locally in your browser.",
   "requestFramePermissions": []
 }

@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
           registerType: 'autoUpdate',
           includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'favicon-16x16.png', 'favicon-32x32.png'],
           manifest: {
-            name: 'Gemini Task Manager',
+            name: 'Task Manager',
             short_name: 'Task Manager',
             description: 'A minimal and elegant task management application',
             theme_color: '#000000',
