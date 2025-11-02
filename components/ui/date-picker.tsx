@@ -55,7 +55,6 @@ export function DatePicker({ value, onChange, placeholder = "Pick a date", class
             }
           }}
           weekStartsOn={1}
-          initialFocus
         />
       </PopoverContent>
     </Popover>

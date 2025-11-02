@@ -79,6 +79,68 @@ thead th {
   margin: 0 !important;
 }
 
+/* Fix navigation arrows visibility and position - STRONG OVERRIDES */
+.rdp-caption {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  margin-bottom: 1rem !important;
+  width: 100% !important;
+}
+
+.rdp-caption_label {
+  flex: 1 !important;
+  text-align: center !important;
+  color: hsl(var(--foreground)) !important;
+  order: 1 !important;
+}
+
+.rdp-nav {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  flex-shrink: 0 !important;
+}
+
+.rdp-nav_button {
+  opacity: 1 !important;
+  color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+  background-color: transparent !important;
+  display: inline-flex !important;
+  visibility: visible !important;
+}
+
+.rdp-nav_button:hover {
+  opacity: 1 !important;
+  background-color: hsl(var(--accent)) !important;
+  color: hsl(var(--accent-foreground)) !important;
+}
+
+.rdp-nav_button svg,
+.rdp-nav_button path {
+  color: hsl(var(--foreground)) !important;
+  stroke: hsl(var(--foreground)) !important;
+  fill: none !important;
+}
+
+.rdp-nav_button_previous {
+  order: -1 !important;
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  margin-right: auto !important;
+}
+
+.rdp-nav_button_next {
+  order: 1 !important;
+  position: static !important;
+  right: auto !important;
+  left: auto !important;
+  margin-left: auto !important;
+}
+
 .rdp-row {
   display: flex;
   width: 100%;
