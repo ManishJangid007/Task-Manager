@@ -1,7 +1,7 @@
 
 import React, { useRef } from 'react';
 import { Project, View } from '../types';
-import { PlusIcon, CalendarDaysIcon, ChartBarIcon, FolderIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, PencilIcon, TrashIcon } from './Icons';
+import { PlusIcon, CalendarDaysIcon, ChartBarIcon, FolderIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, PencilIcon, TrashIcon, XMarkIcon } from './Icons';
 import { ThemeToggle } from './ui/theme-toggle';
 
 interface SidebarProps {
@@ -14,9 +14,11 @@ interface SidebarProps {
   onQuickAddTask: () => void;
   onExport: () => void;
   onImport: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ projects, view, setView, onAddProject, onEditProject, onDeleteProject, onQuickAddTask, onExport, onImport }) => {
+const Sidebar: React.FC<SidebarProps> = ({ projects, view, setView, onAddProject, onEditProject, onDeleteProject, onQuickAddTask, onExport, onImport, isOpen, onClose }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const activeProject = typeof view === 'object' && view.type === 'project' ? view.id : null;
 
@@ -25,11 +27,34 @@ const Sidebar: React.FC<SidebarProps> = ({ projects, view, setView, onAddProject
     };
 
   return (
-    <aside className="w-full md:w-64 lg:w-72 bg-card border-r border-border p-4 space-y-6 flex flex-col h-screen shadow-md">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">Task Manager</h1>
-        <ThemeToggle />
-      </div>
+    <>
+      {/* Mobile overlay */}
+      {isOpen && onClose && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={onClose}
+        />
+      )}
+      <aside className={`
+        fixed md:static inset-y-0 left-0 z-50
+        w-64 lg:w-72 bg-card border-r border-border p-4 space-y-6 flex flex-col h-screen shadow-md
+        transform transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+      `}>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-foreground">Task Manager</h1>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="md:hidden p-1 text-foreground/60 hover:text-foreground"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+        </div>
       
       <nav className="space-y-2">
         <button
@@ -101,6 +126,7 @@ const Sidebar: React.FC<SidebarProps> = ({ projects, view, setView, onAddProject
         <input type="file" ref={fileInputRef} onChange={onImport} className="hidden" accept=".json" />
       </div>
     </aside>
+    </>
   );
 };
 

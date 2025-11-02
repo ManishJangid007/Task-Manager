@@ -6,7 +6,7 @@ import ProjectView from './components/ProjectView';
 import DailyView from './components/DailyView';
 import ReportsView from './components/ReportsView';
 import { getTodayDateString } from './utils/dateUtils';
-import { CheckCircleIcon } from './components/Icons';
+import { CheckCircleIcon, BarsIcon } from './components/Icons';
 import Modal from './components/Modal';
 import BatchTaskModal from './components/BatchTaskModal';
 import { DatePicker } from './components/ui/date-picker';
@@ -128,6 +128,7 @@ function App() {
   const [view, setView] = useState<View>('daily');
   const [notification, setNotification] = useState<string>('');
   const [modalState, setModalState] = useState<ModalState>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (notification) {
@@ -335,17 +336,31 @@ function App() {
       <Sidebar
         projects={projects}
         view={view}
-        setView={setView}
+        setView={(newView) => {
+          setView(newView);
+          setSidebarOpen(false); // Close sidebar on mobile when navigating
+        }}
         onAddProject={handleAddProjectClick}
         onEditProject={handleEditProjectClick}
         onDeleteProject={handleDeleteProject}
         onQuickAddTask={handleQuickAddTaskClick}
         onExport={handleExport}
         onImport={handleImport}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
-      <main className="flex-1 overflow-y-auto">
-        {renderView()}
-        {renderModal()}
+      <main className="flex-1 overflow-y-auto w-full md:w-auto">
+        {/* Mobile menu button */}
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="md:hidden fixed top-4 left-4 z-30 p-2 bg-card border border-border rounded-md text-foreground hover:bg-accent shadow-md"
+        >
+          <BarsIcon className="w-5 h-5" />
+        </button>
+        <div className="md:pl-0 pt-14 md:pt-0">
+          {renderView()}
+          {renderModal()}
+        </div>
       </main>
 
       {notification && (
