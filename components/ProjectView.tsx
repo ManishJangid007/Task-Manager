@@ -3,6 +3,7 @@ import { Project, Task } from '../types';
 import { PlusIcon, ClipboardIcon, XCircleIcon } from './Icons';
 import TaskItem from './TaskItem';
 import { getTodayDateString, getHumanReadableDate } from '../utils/dateUtils';
+import { DatePicker } from './ui/date-picker';
 
 interface ProjectViewProps {
   project: Project;
@@ -73,14 +74,14 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, tasks, onAddTask, on
       </div>
       
        <div className="flex items-center space-x-2 p-2 bg-muted/50 rounded-md border border-border">
-          <label htmlFor="date-filter-project" className="text-sm font-medium text-foreground">Filter by date:</label>
-          <input 
-            id="date-filter-project"
-            type="date" 
-            value={filterDate} 
-            onChange={e => setFilterDate(e.target.value)}
-            className="block px-2 py-1 bg-card border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm text-foreground"
-          />
+          <label htmlFor="date-filter-project" className="text-sm font-medium text-foreground whitespace-nowrap">Filter by date:</label>
+          <div className="flex-1">
+            <DatePicker
+              value={filterDate}
+              onChange={setFilterDate}
+              placeholder="Select a date"
+            />
+          </div>
           {filterDate && (
             <button onClick={() => setFilterDate('')} className="p-1 text-foreground/60 hover:text-destructive transition-colors">
               <XCircleIcon className="w-5 h-5" />

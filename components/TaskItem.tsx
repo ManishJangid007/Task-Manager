@@ -2,6 +2,7 @@
 import React from 'react';
 import { Task } from '../types';
 import { PencilIcon, TrashIcon } from './Icons';
+import { Checkbox } from './ui/checkbox';
 
 interface TaskItemProps {
   task: Task;
@@ -13,11 +14,10 @@ interface TaskItemProps {
 const TaskItem: React.FC<TaskItemProps> = ({ task, onToggleComplete, onDelete, onEdit }) => {
   return (
     <div className="flex items-center p-3 bg-card rounded-lg shadow-sm hover:bg-muted transition-colors">
-      <input
-        type="checkbox"
+      <Checkbox
         checked={task.isCompleted}
-        onChange={() => onToggleComplete(task.id)}
-        className="w-5 h-5 rounded text-primary focus:ring-primary border-border bg-background focus:ring-offset-background"
+        onCheckedChange={() => onToggleComplete(task.id)}
+        className="h-5 w-5"
       />
       <span className={`ml-3 flex-grow ${task.isCompleted ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
         {task.title}

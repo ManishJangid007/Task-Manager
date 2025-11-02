@@ -9,6 +9,7 @@ import { getTodayDateString } from './utils/dateUtils';
 import { CheckCircleIcon } from './components/Icons';
 import Modal from './components/Modal';
 import BatchTaskModal from './components/BatchTaskModal';
+import { DatePicker } from './components/ui/date-picker';
 
 type ModalState =
   | { type: 'addProject' }
@@ -92,16 +93,13 @@ const TaskForm: React.FC<{
         />
       </div>
       <div>
-        <label htmlFor="taskDate" className="block text-sm font-medium text-foreground">
+        <label htmlFor="taskDate" className="block text-sm font-medium text-foreground mb-2">
           Date
         </label>
-        <input
-          type="date"
-          id="taskDate"
+        <DatePicker
           value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="mt-1 block w-full px-3 py-2 bg-card border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-primary focus:border-primary sm:text-sm text-foreground"
-          required
+          onChange={setDate}
+          placeholder="Pick a date"
         />
       </div>
       <div className="flex justify-end space-x-2 pt-2">
