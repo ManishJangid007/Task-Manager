@@ -33,7 +33,7 @@ export function DatePicker({ value, onChange, placeholder = "Pick a date", class
         <Button
           variant={"outline"}
           className={cn(
-            "w-full justify-start text-left font-normal",
+            "justify-start text-left font-normal",
             !date && "text-muted-foreground",
             className
           )}

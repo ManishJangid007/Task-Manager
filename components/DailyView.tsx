@@ -87,18 +87,18 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, projects, onUpdateTask, on
     <div className="p-6 space-y-6">
        <h2 className="text-3xl font-bold text-foreground">Tasks by Date</h2>
        
-       <div className="flex items-center space-x-2 p-2 bg-muted/50 rounded-md border border-border">
-          <label htmlFor="date-filter-daily" className="text-sm font-medium text-foreground whitespace-nowrap">Filter by date:</label>
-          <div className="flex-1">
+       <div className="flex justify-end items-center gap-2">
+          <div className="w-auto">
             <DatePicker
               value={filterDate}
               onChange={setFilterDate}
               placeholder="Select a date"
+              className="w-[200px]"
             />
           </div>
           {filterDate && (
-            <button onClick={() => setFilterDate('')} className="p-1 text-foreground/60 hover:text-destructive transition-colors">
-              <XCircleIcon className="w-5 h-5" />
+            <button onClick={() => setFilterDate('')} className="p-1.5 text-foreground/60 hover:text-destructive transition-colors rounded-md hover:bg-muted" aria-label="Clear date filter">
+              <XCircleIcon className="w-4 h-4" />
             </button>
           )}
         </div>
