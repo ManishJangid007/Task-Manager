@@ -12,6 +12,6 @@ export interface Project {
   name: string;
 }
 
-export type View = 'daily' | 'reports' | { type: 'project'; id: string };
+export type View = 'daily' | 'reports' | 'settings' | { type: 'project'; id: string };
 
 export type ReportPeriod = 'day' | 'week' | 'month' | 'year';

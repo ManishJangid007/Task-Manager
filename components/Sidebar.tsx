@@ -1,7 +1,7 @@
 
 import React, { useRef, useMemo } from 'react';
 import { Project, Task, View } from '../types';
-import { PlusIcon, CalendarDaysIcon, ChartBarIcon, FolderIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, PencilIcon, TrashIcon, XMarkIcon } from './Icons';
+import { PlusIcon, CalendarDaysIcon, ChartBarIcon, FolderIcon, PencilIcon, TrashIcon, XMarkIcon, CogIcon } from './Icons';
 import { ThemeToggle } from './ui/theme-toggle';
 import { Badge } from './ui/badge';
 import { getTodayDateString } from '../utils/dateUtils';
@@ -15,19 +15,12 @@ interface SidebarProps {
   onEditProject: (project: Project) => void;
   onDeleteProject: (projectId: string) => void;
   onQuickAddTask: () => void;
-  onExport: () => void;
-  onImport: (event: React.ChangeEvent<HTMLInputElement>) => void;
   isOpen?: boolean;
   onClose?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ projects, tasks, view, setView, onAddProject, onEditProject, onDeleteProject, onQuickAddTask, onExport, onImport, isOpen, onClose }) => {
-    const fileInputRef = useRef<HTMLInputElement>(null);
+const Sidebar: React.FC<SidebarProps> = ({ projects, tasks, view, setView, onAddProject, onEditProject, onDeleteProject, onQuickAddTask, isOpen, onClose }) => {
     const activeProject = typeof view === 'object' && view.type === 'project' ? view.id : null;
-
-    const handleImportClick = () => {
-        fileInputRef.current?.click();
-    };
 
     const today = getTodayDateString();
     
@@ -137,20 +130,13 @@ const Sidebar: React.FC<SidebarProps> = ({ projects, tasks, view, setView, onAdd
         </ul>
       </div>
 
-      <div className="border-t border-border pt-4 space-y-2">
-         <button
-            onClick={onExport}
-            className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md text-foreground bg-muted hover:bg-muted/80 transition-colors"
+      <div className="border-t border-border pt-4">
+        <button
+            onClick={() => setView('settings')}
+            className={`w-full flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${view === 'settings' ? 'bg-primary text-primary-foreground' : 'text-foreground/80 hover:bg-muted'}`}
         >
-            <ArrowDownTrayIcon className="mr-2 w-5 h-5" /> Export Data
+            <CogIcon className="mr-3 w-5 h-5" /> Settings
         </button>
-         <button
-            onClick={handleImportClick}
-            className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md text-foreground bg-muted hover:bg-muted/80 transition-colors"
-        >
-            <ArrowUpTrayIcon className="mr-2 w-5 h-5" /> Import Data
-        </button>
-        <input type="file" ref={fileInputRef} onChange={onImport} className="hidden" accept=".json" />
       </div>
     </aside>
     </>

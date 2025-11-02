@@ -5,6 +5,7 @@ import Sidebar from './components/Sidebar';
 import ProjectView from './components/ProjectView';
 import DailyView from './components/DailyView';
 import ReportsView from './components/ReportsView';
+import SettingsView from './components/SettingsView';
 import { getTodayDateString } from './utils/dateUtils';
 import { CheckCircleIcon, BarsIcon } from './components/Icons';
 import Modal from './components/Modal';
@@ -261,6 +262,9 @@ function App() {
     if (view === 'reports') {
       return <ReportsView tasks={tasks} projects={projects} />;
     }
+    if (view === 'settings') {
+      return <SettingsView onExport={handleExport} onImport={handleImport} />;
+    }
     if (typeof view === 'object' && view.type === 'project') {
       const project = projects.find(p => p.id === view.id);
       if (!project) {
@@ -345,8 +349,6 @@ function App() {
         onEditProject={handleEditProjectClick}
         onDeleteProject={handleDeleteProject}
         onQuickAddTask={handleQuickAddTaskClick}
-        onExport={handleExport}
-        onImport={handleImport}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
