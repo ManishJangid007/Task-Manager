@@ -60,30 +60,36 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, tasks, onAddTask, on
 
 
   return (
-    <div className="p-6 space-y-4">
-      <div className="flex justify-between items-center flex-wrap gap-3">
-        <h2 className="text-3xl font-bold text-foreground">{project.name}</h2>
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-2">
-            <div className="w-auto">
-              <DatePicker
-                value={filterDate}
-                onChange={setFilterDate}
-                placeholder="Select a date"
-                className="w-[200px]"
-              />
-            </div>
+    <div className="p-4 sm:p-6 space-y-4">
+      <div className="space-y-3">
+        <h2 className="text-2xl sm:text-3xl font-bold text-foreground">{project.name}</h2>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full">
+          <div className="flex items-center gap-2 flex-1 sm:flex-initial min-w-0">
+            <DatePicker
+              value={filterDate}
+              onChange={setFilterDate}
+              placeholder="Select a date"
+              className="w-full sm:w-[200px] h-9 sm:h-9 text-sm"
+            />
             {filterDate && (
-              <button onClick={() => setFilterDate('')} className="p-1.5 text-foreground/60 hover:text-destructive transition-colors rounded-md hover:bg-muted" aria-label="Clear date filter">
+              <button onClick={() => setFilterDate('')} className="flex-shrink-0 h-9 w-9 text-foreground/60 hover:text-destructive transition-colors rounded-md hover:bg-muted flex items-center justify-center" aria-label="Clear date filter">
                 <XCircleIcon className="w-4 h-4" />
               </button>
             )}
           </div>
-          <button onClick={copyTodaysTasks} className="flex items-center px-3 py-2 text-sm bg-card border border-border rounded-md shadow-sm hover:bg-muted text-foreground transition-colors">
-              <ClipboardIcon className="mr-2 w-4 h-4"/> Copy Today's Tasks
+          <button 
+            onClick={copyTodaysTasks} 
+            className="flex items-center justify-center px-3 sm:px-4 py-2 h-9 text-xs sm:text-sm bg-card border border-border rounded-md shadow-sm hover:bg-muted text-foreground transition-colors whitespace-nowrap w-full sm:w-auto"
+          >
+            <ClipboardIcon className="mr-2 w-4 h-4 flex-shrink-0"/> 
+            <span className="hidden sm:inline">Copy Today's Tasks</span>
+            <span className="sm:hidden">Copy Today</span>
           </button>
-          <button onClick={() => onAddTask(project.id)} className="flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md shadow-sm hover:bg-primary/90 transition-colors">
-              <PlusIcon className="mr-2 w-5 h-5" /> Add Task
+          <button 
+            onClick={() => onAddTask(project.id)} 
+            className="flex items-center justify-center px-3 sm:px-4 py-2 h-9 text-xs sm:text-sm bg-primary text-primary-foreground rounded-md shadow-sm hover:bg-primary/90 transition-colors whitespace-nowrap w-full sm:w-auto"
+          >
+            <PlusIcon className="mr-2 w-4 h-4 flex-shrink-0" /> Add Task
           </button>
         </div>
       </div>
