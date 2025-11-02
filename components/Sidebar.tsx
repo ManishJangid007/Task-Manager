@@ -1,11 +1,14 @@
 
-import React, { useRef } from 'react';
-import { Project, View } from '../types';
+import React, { useRef, useMemo } from 'react';
+import { Project, Task, View } from '../types';
 import { PlusIcon, CalendarDaysIcon, ChartBarIcon, FolderIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, PencilIcon, TrashIcon, XMarkIcon } from './Icons';
 import { ThemeToggle } from './ui/theme-toggle';
+import { Badge } from './ui/badge';
+import { getTodayDateString } from '../utils/dateUtils';
 
 interface SidebarProps {
   projects: Project[];
+  tasks: Task[];
   view: View;
   setView: (view: View) => void;
   onAddProject: () => void;
@@ -18,13 +21,31 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ projects, view, setView, onAddProject, onEditProject, onDeleteProject, onQuickAddTask, onExport, onImport, isOpen, onClose }) => {
+const Sidebar: React.FC<SidebarProps> = ({ projects, tasks, view, setView, onAddProject, onEditProject, onDeleteProject, onQuickAddTask, onExport, onImport, isOpen, onClose }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const activeProject = typeof view === 'object' && view.type === 'project' ? view.id : null;
 
     const handleImportClick = () => {
         fileInputRef.current?.click();
     };
+
+    const today = getTodayDateString();
+    
+    // Count all today's tasks across all projects
+    const todaysTaskCount = useMemo(() => {
+        return tasks.filter(task => task.date === today).length;
+    }, [tasks, today]);
+
+    // Count today's tasks for each project
+    const projectTodayCounts = useMemo(() => {
+        const counts: Record<string, number> = {};
+        projects.forEach(project => {
+            counts[project.id] = tasks.filter(
+                task => task.projectId === project.id && task.date === today
+            ).length;
+        });
+        return counts;
+    }, [projects, tasks, today]);
 
   return (
     <>
@@ -59,9 +80,12 @@ const Sidebar: React.FC<SidebarProps> = ({ projects, view, setView, onAddProject
       <nav className="space-y-2">
         <button
             onClick={() => setView('daily')}
-            className={`w-full flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${view === 'daily' ? 'bg-primary text-primary-foreground' : 'text-foreground/80 hover:bg-muted'}`}
+            className={`w-full flex items-center justify-between px-4 py-2 text-sm font-medium rounded-md transition-colors ${view === 'daily' ? 'bg-primary text-primary-foreground' : 'text-foreground/80 hover:bg-muted'}`}
         >
-            <CalendarDaysIcon className="mr-3 w-5 h-5"/> Tasks by Date
+            <div className="flex items-center">
+                <CalendarDaysIcon className="mr-3 w-5 h-5"/> Tasks by Date
+            </div>
+            <Badge count={todaysTaskCount} />
         </button>
         <button
             onClick={() => setView('reports')}
@@ -91,10 +115,13 @@ const Sidebar: React.FC<SidebarProps> = ({ projects, view, setView, onAddProject
                 <a
                   href="#"
                   onClick={(e) => { e.preventDefault(); setView({ type: 'project', id: project.id }); }}
-                  className={`flex-grow flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeProject === project.id ? 'bg-primary text-primary-foreground' : 'text-foreground/80 hover:bg-muted'}`}
+                  className={`flex-grow flex items-center justify-between px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeProject === project.id ? 'bg-primary text-primary-foreground' : 'text-foreground/80 hover:bg-muted'}`}
                 >
-                  <FolderIcon className="mr-3 w-5 h-5 flex-shrink-0" />
-                  <span className="truncate">{project.name}</span>
+                  <div className="flex items-center min-w-0">
+                    <FolderIcon className="mr-3 w-5 h-5 flex-shrink-0" />
+                    <span className="truncate">{project.name}</span>
+                  </div>
+                  <Badge count={projectTodayCounts[project.id] || 0} className="ml-2 flex-shrink-0" />
                 </a>
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center pr-2">
                     <button onClick={() => onEditProject(project)} className="p-1 text-foreground/60 hover:text-primary transition-colors">

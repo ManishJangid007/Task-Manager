@@ -335,6 +335,7 @@ function App() {
     <div className="flex h-screen bg-background text-foreground">
       <Sidebar
         projects={projects}
+        tasks={tasks}
         view={view}
         setView={(newView) => {
           setView(newView);
