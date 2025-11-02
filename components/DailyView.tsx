@@ -84,19 +84,19 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, projects, onUpdateTask, on
 
   return (
     <div className="p-6 space-y-6">
-       <h2 className="text-3xl font-bold text-gray-800 dark:text-white">Tasks by Date</h2>
+       <h2 className="text-3xl font-bold text-foreground">Tasks by Date</h2>
        
-       <div className="flex items-center space-x-2 p-2 bg-gray-50 dark:bg-gray-800/50 rounded-md border border-gray-200 dark:border-gray-700">
-          <label htmlFor="date-filter-daily" className="text-sm font-medium text-gray-700 dark:text-gray-300">Filter by date:</label>
+       <div className="flex items-center space-x-2 p-2 bg-muted/50 rounded-md border border-border">
+          <label htmlFor="date-filter-daily" className="text-sm font-medium text-foreground">Filter by date:</label>
           <input 
             id="date-filter-daily"
             type="date" 
             value={filterDate} 
             onChange={e => setFilterDate(e.target.value)}
-            className="block px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            className="block px-2 py-1 bg-card border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm text-foreground"
           />
           {filterDate && (
-            <button onClick={() => setFilterDate('')} className="p-1 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400">
+            <button onClick={() => setFilterDate('')} className="p-1 text-foreground/60 hover:text-destructive transition-colors">
               <XCircleIcon className="w-5 h-5" />
             </button>
           )}
@@ -106,15 +106,15 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, projects, onUpdateTask, on
         sortedDates.map(date => (
           <div key={date}>
             <div className="flex items-center mb-3">
-              <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300">{getHumanReadableDate(date)}</h3>
-              <button onClick={() => copyDaysTasks(date)} className="ml-4 text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+              <h3 className="text-xl font-semibold text-foreground">{getHumanReadableDate(date)}</h3>
+              <button onClick={() => copyDaysTasks(date)} className="ml-4 text-foreground/60 hover:text-primary transition-colors">
                 <ClipboardIcon />
               </button>
             </div>
             <div className="space-y-2">
               {groupedTasks[date].map(task => (
-                 <div key={task.id} className="pl-4 border-l-2 border-indigo-200 dark:border-indigo-800">
-                    <div className="text-xs text-indigo-600 dark:text-indigo-400 font-medium mb-1">{getProjectName(task.projectId)}</div>
+                 <div key={task.id} className="pl-4 border-l-2 border-primary/30">
+                    <div className="text-xs text-primary font-medium mb-1">{getProjectName(task.projectId)}</div>
                      <TaskItem
                         task={task}
                         onToggleComplete={handleToggleComplete}
@@ -128,7 +128,7 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, projects, onUpdateTask, on
         ))
        ) : (
         <div className="text-center py-10">
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-muted-foreground">
             {filterDate ? `No tasks found for ${getHumanReadableDate(filterDate)}.` : 'No tasks scheduled. Add some tasks to a project to see them here.'}
           </p>
         </div>

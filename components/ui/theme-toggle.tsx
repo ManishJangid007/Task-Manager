@@ -34,8 +34,8 @@ export function ThemeToggle() {
       onClick={() => setTheme(isDark ? "light" : "dark")}
       className={cn(
         "flex items-center justify-center w-10 h-10 rounded-md",
-        "text-gray-700 dark:text-gray-300",
-        "hover:bg-gray-100 dark:hover:bg-gray-700",
+        "text-foreground/80",
+        "hover:bg-muted",
         "transition-colors"
       )}
       aria-label="Toggle theme"

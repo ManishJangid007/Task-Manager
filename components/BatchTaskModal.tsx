@@ -59,11 +59,11 @@ const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onC
   if (projects.length === 0) {
     return (
         <div className="text-center">
-            <p className="text-gray-600 dark:text-gray-400 mb-4">You need to create a project first before adding tasks.</p>
+            <p className="text-muted-foreground mb-4">You need to create a project first before adding tasks.</p>
             <button
                 type="button"
                 onClick={onCancel}
-                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none"
+                className="px-4 py-2 text-sm font-medium text-foreground bg-card border border-border rounded-md shadow-sm hover:bg-muted focus:outline-none transition-colors"
             >
                 Close
             </button>
@@ -79,7 +79,7 @@ const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onC
             <select
               value={row.projectId}
               onChange={(e) => handleRowChange(row.id, 'projectId', e.target.value)}
-              className="block w-1/3 px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              className="block w-1/3 px-3 py-2 bg-card border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm text-foreground"
             >
               {projects.map(p => (
                 <option key={p.id} value={p.id}>{p.name}</option>
@@ -93,9 +93,9 @@ const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onC
               value={row.title}
               onChange={(e) => handleRowChange(row.id, 'title', e.target.value)}
               onKeyDown={handleKeyDown}
-              className="block w-2/3 px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              className="block w-2/3 px-3 py-2 bg-card border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-primary focus:border-primary sm:text-sm text-foreground"
             />
-            <button type="button" onClick={() => handleRemoveRow(row.id)} className="text-gray-400 hover:text-red-600 dark:hover:text-red-400">
+            <button type="button" onClick={() => handleRemoveRow(row.id)} className="text-foreground/60 hover:text-destructive transition-colors">
               <TrashIcon className="w-5 h-5" />
             </button>
           </div>
@@ -104,23 +104,23 @@ const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onC
       <button
         type="button"
         onClick={handleAddRow}
-        className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-gray-700 hover:bg-indigo-200 dark:hover:bg-gray-600 transition-colors"
+        className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md text-primary bg-muted hover:bg-muted/80 transition-colors"
       >
         <PlusIcon className="w-5 h-5 mr-2" />
         Add Another Task
       </button>
 
-      <div className="flex justify-end space-x-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+      <div className="flex justify-end space-x-2 pt-4 border-t border-border">
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none"
+          className="px-4 py-2 text-sm font-medium text-foreground bg-card border border-border rounded-md shadow-sm hover:bg-muted focus:outline-none transition-colors"
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none"
+          className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground border border-transparent rounded-md shadow-sm hover:bg-primary/90 focus:outline-none transition-colors"
         >
           Add All Tasks
         </button>

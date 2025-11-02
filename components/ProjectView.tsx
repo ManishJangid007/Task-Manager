@@ -61,28 +61,28 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, tasks, onAddTask, on
   return (
     <div className="p-6 space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold text-gray-800 dark:text-white">{project.name}</h2>
+        <h2 className="text-3xl font-bold text-foreground">{project.name}</h2>
         <div className="flex items-center space-x-2">
-            <button onClick={copyTodaysTasks} className="flex items-center px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition-colors">
+            <button onClick={copyTodaysTasks} className="flex items-center px-3 py-2 text-sm bg-card border border-border rounded-md shadow-sm hover:bg-muted text-foreground transition-colors">
                 <ClipboardIcon className="mr-2 w-4 h-4"/> Copy Today's Tasks
             </button>
-            <button onClick={() => onAddTask(project.id)} className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md shadow-sm hover:bg-indigo-700 transition-colors">
+            <button onClick={() => onAddTask(project.id)} className="flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md shadow-sm hover:bg-primary/90 transition-colors">
                 <PlusIcon className="mr-2 w-5 h-5" /> Add Task
             </button>
         </div>
       </div>
       
-       <div className="flex items-center space-x-2 p-2 bg-gray-50 dark:bg-gray-800/50 rounded-md border border-gray-200 dark:border-gray-700">
-          <label htmlFor="date-filter-project" className="text-sm font-medium text-gray-700 dark:text-gray-300">Filter by date:</label>
+       <div className="flex items-center space-x-2 p-2 bg-muted/50 rounded-md border border-border">
+          <label htmlFor="date-filter-project" className="text-sm font-medium text-foreground">Filter by date:</label>
           <input 
             id="date-filter-project"
             type="date" 
             value={filterDate} 
             onChange={e => setFilterDate(e.target.value)}
-            className="block px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            className="block px-2 py-1 bg-card border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm text-foreground"
           />
           {filterDate && (
-            <button onClick={() => setFilterDate('')} className="p-1 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400">
+            <button onClick={() => setFilterDate('')} className="p-1 text-foreground/60 hover:text-destructive transition-colors">
               <XCircleIcon className="w-5 h-5" />
             </button>
           )}
@@ -92,7 +92,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, tasks, onAddTask, on
         <div className="space-y-6">
           {sortedDates.map(date => (
             <div key={date}>
-              <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-3 border-b border-gray-200 dark:border-gray-700 pb-2">
+              <h3 className="text-lg font-semibold text-foreground mb-3 border-b border-border pb-2">
                 {getHumanReadableDate(date)}
               </h3>
               <div className="space-y-2">
@@ -111,7 +111,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, tasks, onAddTask, on
         </div>
       ) : (
         <div className="text-center py-10">
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-muted-foreground">
             {filterDate ? `No tasks found for ${getHumanReadableDate(filterDate)}.` : 'No tasks in this project yet. Add one to get started!'}
           </p>
         </div>
