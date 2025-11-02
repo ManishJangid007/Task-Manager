@@ -61,33 +61,32 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, tasks, onAddTask, on
 
   return (
     <div className="p-6 space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-wrap gap-3">
         <h2 className="text-3xl font-bold text-foreground">{project.name}</h2>
-        <div className="flex items-center space-x-2">
-            <button onClick={copyTodaysTasks} className="flex items-center px-3 py-2 text-sm bg-card border border-border rounded-md shadow-sm hover:bg-muted text-foreground transition-colors">
-                <ClipboardIcon className="mr-2 w-4 h-4"/> Copy Today's Tasks
-            </button>
-            <button onClick={() => onAddTask(project.id)} className="flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md shadow-sm hover:bg-primary/90 transition-colors">
-                <PlusIcon className="mr-2 w-5 h-5" /> Add Task
-            </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <div className="w-auto">
+              <DatePicker
+                value={filterDate}
+                onChange={setFilterDate}
+                placeholder="Select a date"
+                className="w-[200px]"
+              />
+            </div>
+            {filterDate && (
+              <button onClick={() => setFilterDate('')} className="p-1.5 text-foreground/60 hover:text-destructive transition-colors rounded-md hover:bg-muted" aria-label="Clear date filter">
+                <XCircleIcon className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+          <button onClick={copyTodaysTasks} className="flex items-center px-3 py-2 text-sm bg-card border border-border rounded-md shadow-sm hover:bg-muted text-foreground transition-colors">
+              <ClipboardIcon className="mr-2 w-4 h-4"/> Copy Today's Tasks
+          </button>
+          <button onClick={() => onAddTask(project.id)} className="flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md shadow-sm hover:bg-primary/90 transition-colors">
+              <PlusIcon className="mr-2 w-5 h-5" /> Add Task
+          </button>
         </div>
       </div>
-      
-       <div className="flex justify-end items-center gap-2">
-          <div className="w-auto">
-            <DatePicker
-              value={filterDate}
-              onChange={setFilterDate}
-              placeholder="Select a date"
-              className="w-[200px]"
-            />
-          </div>
-          {filterDate && (
-            <button onClick={() => setFilterDate('')} className="p-1.5 text-foreground/60 hover:text-destructive transition-colors rounded-md hover:bg-muted" aria-label="Clear date filter">
-              <XCircleIcon className="w-4 h-4" />
-            </button>
-          )}
-        </div>
 
       {filteredTasks.length > 0 ? (
         <div className="space-y-6">
