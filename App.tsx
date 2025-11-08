@@ -10,6 +10,7 @@ import { getTodayDateString } from './utils/dateUtils';
 import { CheckCircleIcon, BarsIcon } from './components/Icons';
 import Modal from './components/Modal';
 import BatchTaskModal from './components/BatchTaskModal';
+import ProjectBatchTaskModal from './components/ProjectBatchTaskModal';
 import { DatePicker } from './components/ui/date-picker';
 import {
   AlertDialog,
@@ -223,6 +224,22 @@ function App() {
     setModalState(null);
   };
 
+  const handleProjectBatchCreateTasks = (projectId: string, newTasks: Array<{ title: string; date: string }>) => {
+    const tasksToAdd: Task[] = newTasks.map((t, i) => ({
+      id: `task_${Date.now()}_${i}`,
+      projectId: projectId,
+      title: t.title,
+      date: t.date,
+      isCompleted: false,
+    }));
+
+    if (tasksToAdd.length > 0) {
+      setTasks(prevTasks => [...prevTasks, ...tasksToAdd]);
+      setNotification(`${tasksToAdd.length} task(s) added successfully!`);
+    }
+    setModalState(null);
+  };
+
 
   const handleUpdateTask = (updatedTask: Task) => {
     setTasks(tasks.map(task => task.id === updatedTask.id ? updatedTask : task));
@@ -327,9 +344,10 @@ function App() {
         );
       case 'addTask':
         return (
-          <Modal isOpen={true} onClose={() => setModalState(null)} title="Add New Task">
-            <TaskForm
-              onSubmit={(title, date) => handleCreateTask(title, modalState.projectId, date)}
+          <Modal isOpen={true} onClose={() => setModalState(null)} title="Add New Tasks" size="large">
+            <ProjectBatchTaskModal
+              projectId={modalState.projectId}
+              onSubmit={(tasks) => handleProjectBatchCreateTasks(modalState.projectId, tasks)}
               onCancel={() => setModalState(null)}
             />
           </Modal>
