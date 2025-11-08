@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Project } from '../types';
 import { PlusIcon, TrashIcon } from './Icons';
+import { Combobox } from './ui/combobox';
 
 interface BatchTaskModalProps {
   projects: Project[];
@@ -91,15 +92,16 @@ const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onC
       <div className="flex-1 overflow-y-auto pr-2 space-y-3 sm:space-y-4 min-h-0">
         {taskRows.map((row, index) => (
           <div key={row.id} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-            <select
-              value={row.projectId}
-              onChange={(e) => handleRowChange(row.id, 'projectId', e.target.value)}
-              className="flex-1 sm:flex-none sm:w-1/3 px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-sm bg-card border border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-foreground"
-            >
-              {projects.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
+            <div className="flex-1 sm:flex-none sm:w-1/3">
+              <Combobox
+                value={row.projectId}
+                onChange={(value) => handleRowChange(row.id, 'projectId', value)}
+                options={projects.map(p => ({ value: p.id, label: p.name }))}
+                placeholder="Select project..."
+                searchPlaceholder="Search projects..."
+                className="w-full"
+              />
+            </div>
             <input
               // FIX: The ref callback should not return a value. Using a block body for the arrow function fixes the type error.
               ref={el => { inputsRef.current[index] = el; }}
