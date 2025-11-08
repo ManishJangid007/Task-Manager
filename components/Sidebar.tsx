@@ -64,7 +64,7 @@ const Sidebar: React.FC<SidebarProps> = ({ projects, tasks, view, setView, onAdd
         ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground">Task Manager</h1>
+          <h1 className="text-2xl font-bold text-foreground">Chrono</h1>
           <div className="flex items-center gap-2">
             <ThemeToggle />
             {onClose && (

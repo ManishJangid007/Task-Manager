@@ -1,6 +1,6 @@
 {
-  "name": "Task Manager",
-  "short_name": "Task Manager",
+  "name": "Chrono",
+  "short_name": "Chrono",
   "description": "A minimal and elegant task management application",
   "start_url": "/",
   "display": "standalone",
