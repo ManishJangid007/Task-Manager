@@ -22,15 +22,15 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onExport, onImport, include
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <h2 className="text-3xl font-bold text-foreground">Settings</h2>
+    <div className="p-4 sm:p-6 space-y-6">
+      <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Settings</h2>
 
       <div className="space-y-4">
-        <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
-          <h3 className="text-xl font-semibold text-foreground mb-4">Sidebar Preferences</h3>
+        <div className="bg-card border border-border rounded-lg p-4 sm:p-6 shadow-sm">
+          <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-4">Sidebar Preferences</h3>
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="space-y-0.5 flex-1">
                 <Label htmlFor="include-completed" className="text-sm font-medium text-foreground">
                   Include completed tasks in sidebar counts
                 </Label>
@@ -38,14 +38,16 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onExport, onImport, include
                   When enabled, sidebar task counts include all tasks. When disabled, only incomplete tasks are counted.
                 </p>
               </div>
-              <Switch
-                id="include-completed"
-                checked={includeCompletedTasks}
-                onCheckedChange={onIncludeCompletedTasksChange}
-              />
+              <div className="flex-shrink-0">
+                <Switch
+                  id="include-completed"
+                  checked={includeCompletedTasks}
+                  onCheckedChange={onIncludeCompletedTasksChange}
+                />
+              </div>
             </div>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="space-y-0.5 flex-1">
                 <Label htmlFor="project-sort" className="text-sm font-medium text-foreground">
                   How to sort projects
                 </Label>
@@ -53,22 +55,24 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onExport, onImport, include
                   Choose how projects are sorted in the sidebar. Pinned projects always appear first.
                 </p>
               </div>
-              <Select
-                value={projectSortOrder}
-                onChange={(value) => onProjectSortOrderChange(value as ProjectSortOrder)}
-                options={[
-                  { value: 'alphabetical', label: 'Alphabetically' },
-                  { value: 'taskCount', label: 'By number of today\'s incomplete tasks' },
-                  { value: 'recentActivity', label: 'Most recently active' },
-                ]}
-                className="min-w-[280px]"
-              />
+              <div className="w-full sm:w-auto sm:flex-shrink-0">
+                <Select
+                  value={projectSortOrder}
+                  onChange={(value) => onProjectSortOrderChange(value as ProjectSortOrder)}
+                  options={[
+                    { value: 'alphabetical', label: 'Alphabetically' },
+                    { value: 'taskCount', label: 'By number of today\'s incomplete tasks' },
+                    { value: 'recentActivity', label: 'Most recently active' },
+                  ]}
+                  className="w-full sm:min-w-[280px]"
+                />
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
-          <h3 className="text-xl font-semibold text-foreground mb-4">Data Management</h3>
+        <div className="bg-card border border-border rounded-lg p-4 sm:p-6 shadow-sm">
+          <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-4">Data Management</h3>
           <p className="text-muted-foreground mb-6">
             Export your tasks and projects to a backup file, or import data from a previous backup.
           </p>
