@@ -72,14 +72,14 @@ const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onC
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="max-h-80 overflow-y-auto pr-2 space-y-3">
+    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+      <div className="max-h-[60vh] sm:max-h-[500px] overflow-y-auto pr-2 space-y-3 sm:space-y-4">
         {taskRows.map((row, index) => (
-          <div key={row.id} className="flex items-center space-x-2">
+          <div key={row.id} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
             <select
               value={row.projectId}
               onChange={(e) => handleRowChange(row.id, 'projectId', e.target.value)}
-              className="block w-1/3 px-3 py-2 bg-card border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm text-foreground"
+              className="flex-1 sm:flex-none sm:w-1/3 px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-sm bg-card border border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-foreground"
             >
               {projects.map(p => (
                 <option key={p.id} value={p.id}>{p.name}</option>
@@ -93,9 +93,14 @@ const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onC
               value={row.title}
               onChange={(e) => handleRowChange(row.id, 'title', e.target.value)}
               onKeyDown={handleKeyDown}
-              className="block w-2/3 px-3 py-2 bg-card border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-primary focus:border-primary sm:text-sm text-foreground"
+              className="flex-1 px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-sm bg-card border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-foreground"
             />
-            <button type="button" onClick={() => handleRemoveRow(row.id)} className="text-foreground/60 hover:text-destructive transition-colors">
+            <button 
+              type="button" 
+              onClick={() => handleRemoveRow(row.id)} 
+              className="self-start sm:self-auto px-3 py-2.5 sm:px-2 sm:py-1 text-foreground/60 hover:text-destructive transition-colors rounded-md hover:bg-muted"
+              aria-label="Remove task"
+            >
               <TrashIcon className="w-5 h-5" />
             </button>
           </div>
@@ -104,23 +109,23 @@ const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onC
       <button
         type="button"
         onClick={handleAddRow}
-        className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md text-primary bg-muted hover:bg-muted/80 transition-colors"
+        className="w-full flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-2 text-sm font-medium rounded-md text-primary bg-muted hover:bg-muted/80 transition-colors"
       >
         <PlusIcon className="w-5 h-5 mr-2" />
         Add Another Task
       </button>
 
-      <div className="flex justify-end space-x-2 pt-4 border-t border-border">
+      <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-4 border-t border-border">
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-sm font-medium text-foreground bg-card border border-border rounded-md shadow-sm hover:bg-muted focus:outline-none transition-colors"
+          className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-2 text-sm font-medium text-foreground bg-card border border-border rounded-md shadow-sm hover:bg-muted focus:outline-none transition-colors"
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground border border-transparent rounded-md shadow-sm hover:bg-primary/90 focus:outline-none transition-colors"
+          className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-2 text-sm font-medium bg-primary text-primary-foreground border border-transparent rounded-md shadow-sm hover:bg-primary/90 focus:outline-none transition-colors"
         >
           Add All Tasks
         </button>
