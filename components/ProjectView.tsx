@@ -71,26 +71,26 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, tasks, onAddTask, on
 
 
   return (
-    <div className="p-4 sm:p-6 space-y-4">
-      <div className="space-y-3">
+    <div className="p-4 sm:p-6 space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-2xl sm:text-3xl font-bold text-foreground">{project.name}</h2>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full">
-          <div className="flex items-center gap-2 flex-1 sm:flex-initial min-w-0">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="w-auto">
             <DatePicker
               value={filterDate}
               onChange={setFilterDate}
               placeholder="Select a date"
-              className="w-full sm:w-[200px] h-9 sm:h-9 text-sm"
+              className="w-full sm:w-[200px] h-9"
             />
-            {filterDate && (
-              <button onClick={() => setFilterDate('')} className="flex-shrink-0 h-9 w-9 text-foreground/60 hover:text-destructive transition-colors rounded-md hover:bg-muted flex items-center justify-center" aria-label="Clear date filter">
-                <XCircleIcon className="w-4 h-4" />
-              </button>
-            )}
           </div>
+          {filterDate && (
+            <button onClick={() => setFilterDate('')} className="h-9 w-9 p-1.5 text-foreground/60 hover:text-destructive transition-colors rounded-md hover:bg-muted flex items-center justify-center" aria-label="Clear date filter">
+              <XCircleIcon className="w-4 h-4" />
+            </button>
+          )}
           <button 
             onClick={() => onAddTask(project.id)} 
-            className="flex items-center justify-center px-3 sm:px-4 py-2 h-9 text-xs sm:text-sm bg-primary text-primary-foreground rounded-md shadow-sm hover:bg-primary/90 transition-colors whitespace-nowrap w-full sm:w-auto"
+            className="flex items-center justify-center px-3 sm:px-4 h-9 text-xs sm:text-sm bg-primary text-primary-foreground rounded-md shadow-sm hover:bg-primary/90 transition-colors whitespace-nowrap"
           >
             <PlusIcon className="mr-2 w-4 h-4 flex-shrink-0" /> Add Task
           </button>
