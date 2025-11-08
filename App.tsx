@@ -11,6 +11,16 @@ import { CheckCircleIcon, BarsIcon } from './components/Icons';
 import Modal from './components/Modal';
 import BatchTaskModal from './components/BatchTaskModal';
 import { DatePicker } from './components/ui/date-picker';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from './components/ui/alert-dialog';
 
 type ModalState =
   | { type: 'addProject' }
@@ -72,7 +82,7 @@ const TaskForm: React.FC<{
 }> = ({ onSubmit, onCancel, task }) => {
   const [title, setTitle] = useState(task?.title || '');
   const [date, setDate] = useState(task?.date || getTodayDateString());
-  
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(title, date);
@@ -131,6 +141,7 @@ function App() {
   const [notification, setNotification] = useState<string>('');
   const [modalState, setModalState] = useState<ModalState>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [deleteDialog, setDeleteDialog] = useState<{ type: 'project' | 'task'; id: string } | null>(null);
 
   useEffect(() => {
     if (notification) {
@@ -161,15 +172,18 @@ function App() {
   };
 
   const handleDeleteProject = (projectId: string) => {
-    if (window.confirm('Are you sure you want to delete this project and all its tasks? This action cannot be undone.')) {
-      setProjects(projects.filter(p => p.id !== projectId));
-      setTasks(tasks.filter(t => t.projectId !== projectId));
-      
-      if (typeof view === 'object' && view.type === 'project' && view.id === projectId) {
-        setView('daily');
-      }
-      setNotification('Project deleted successfully.');
+    setDeleteDialog({ type: 'project', id: projectId });
+  };
+
+  const confirmDeleteProject = (projectId: string) => {
+    setProjects(projects.filter(p => p.id !== projectId));
+    setTasks(tasks.filter(t => t.projectId !== projectId));
+
+    if (typeof view === 'object' && view.type === 'project' && view.id === projectId) {
+      setView('daily');
     }
+    setNotification('Project deleted successfully.');
+    setDeleteDialog(null);
   };
 
   const handleCreateTask = (title: string, projectId: string, date: string) => {
@@ -185,7 +199,7 @@ function App() {
       setModalState(null);
     }
   };
-  
+
   const handleBatchCreateTasks = (newTasks: Array<{ title: string; projectId: string }>) => {
     const tasksToAdd: Task[] = newTasks.map((t, i) => ({
       id: `task_${Date.now()}_${i}`,
@@ -195,7 +209,7 @@ function App() {
       isCompleted: false,
     }));
 
-    if(tasksToAdd.length > 0) {
+    if (tasksToAdd.length > 0) {
       setTasks(prevTasks => [...prevTasks, ...tasksToAdd]);
       setNotification(`${tasksToAdd.length} task(s) added successfully!`);
     }
@@ -211,9 +225,12 @@ function App() {
   };
 
   const handleDeleteTask = (taskId: string) => {
-    if (window.confirm('Are you sure you want to delete this task?')) {
-      setTasks(tasks.filter(task => task.id !== taskId));
-    }
+    setDeleteDialog({ type: 'task', id: taskId });
+  };
+
+  const confirmDeleteTask = (taskId: string) => {
+    setTasks(tasks.filter(task => task.id !== taskId));
+    setDeleteDialog(null);
   };
 
   const handleExport = () => {
@@ -374,6 +391,37 @@ function App() {
           {notification}
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialog !== null} onOpenChange={(open) => !open && setDeleteDialog(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {deleteDialog?.type === 'project' ? 'Delete Project' : 'Delete Task'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteDialog?.type === 'project'
+                ? 'Are you sure you want to delete this project and all its tasks? This action cannot be undone.'
+                : 'Are you sure you want to delete this task? This action cannot be undone.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteDialog?.type === 'project') {
+                  confirmDeleteProject(deleteDialog.id);
+                } else if (deleteDialog?.type === 'task') {
+                  confirmDeleteTask(deleteDialog.id);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
