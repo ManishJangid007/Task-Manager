@@ -1,6 +1,6 @@
 
 import React, { useRef, useMemo, useState } from 'react';
-import { Project, Task, View } from '../types';
+import { Project, Task, View, ProjectSortOrder } from '../types';
 import { PlusIcon, CalendarDaysIcon, ChartBarIcon, FolderIcon, PencilIcon, TrashIcon, XMarkIcon, CogIcon, MagnifyingGlassIcon, PinIcon, EllipsisVerticalIcon } from './Icons';
 import { ThemeToggle } from './ui/theme-toggle';
 import { Badge } from './ui/badge';
@@ -24,11 +24,12 @@ interface SidebarProps {
   onTogglePin: (projectId: string) => void;
   onQuickAddTask: () => void;
   includeCompletedTasks: boolean;
+  projectSortOrder: ProjectSortOrder;
   isOpen?: boolean;
   onClose?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ projects, tasks, view, setView, onAddProject, onEditProject, onDeleteProject, onTogglePin, onQuickAddTask, includeCompletedTasks, isOpen, onClose }) => {
+const Sidebar: React.FC<SidebarProps> = ({ projects, tasks, view, setView, onAddProject, onEditProject, onDeleteProject, onTogglePin, onQuickAddTask, includeCompletedTasks, projectSortOrder, isOpen, onClose }) => {
     const activeProject = typeof view === 'object' && view.type === 'project' ? view.id : null;
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -57,7 +58,7 @@ const Sidebar: React.FC<SidebarProps> = ({ projects, tasks, view, setView, onAdd
         return counts;
     }, [projects, filteredTasks, today]);
 
-    // Filter and sort projects based on search query and pinned status
+    // Filter and sort projects based on search query, pinned status, and sort order
     const filteredProjects = useMemo(() => {
         let filtered = projects;
         
@@ -69,17 +70,60 @@ const Sidebar: React.FC<SidebarProps> = ({ projects, tasks, view, setView, onAdd
             );
         }
         
-        // Sort: pinned projects first, then by name
+        // Sort: pinned projects first, then by selected sort order
         return [...filtered].sort((a, b) => {
             const aPinned = a.pinned ?? false;
             const bPinned = b.pinned ?? false;
             
+            // Pinned projects always come first
             if (aPinned && !bPinned) return -1;
             if (!aPinned && bPinned) return 1;
             
+            // If both are pinned or both are not pinned, use the selected sort order
+            if (projectSortOrder === 'alphabetical') {
+                return a.name.localeCompare(b.name);
+            } else if (projectSortOrder === 'taskCount') {
+                // Sort by number of today's incomplete tasks (descending)
+                const aCount = filteredTasks.filter(
+                    task => task.projectId === a.id && task.date === today && !task.isCompleted
+                ).length;
+                const bCount = filteredTasks.filter(
+                    task => task.projectId === b.id && task.date === today && !task.isCompleted
+                ).length;
+                if (bCount !== aCount) {
+                    return bCount - aCount; // Descending order
+                }
+                // If counts are equal, sort alphabetically
+                return a.name.localeCompare(b.name);
+            } else if (projectSortOrder === 'recentActivity') {
+                // Sort by most recent task added (descending)
+                const aTasks = tasks.filter(task => task.projectId === a.id);
+                const bTasks = tasks.filter(task => task.projectId === b.id);
+                
+                const aLatest = aTasks.length > 0 
+                    ? Math.max(...aTasks.map(task => {
+                        const timestamp = task.id.match(/\d+/)?.[0];
+                        return timestamp ? parseInt(timestamp) : 0;
+                    }))
+                    : 0;
+                const bLatest = bTasks.length > 0
+                    ? Math.max(...bTasks.map(task => {
+                        const timestamp = task.id.match(/\d+/)?.[0];
+                        return timestamp ? parseInt(timestamp) : 0;
+                    }))
+                    : 0;
+                
+                if (bLatest !== aLatest) {
+                    return bLatest - aLatest; // Descending order (most recent first)
+                }
+                // If no tasks or same timestamp, sort alphabetically
+                return a.name.localeCompare(b.name);
+            }
+            
+            // Default to alphabetical
             return a.name.localeCompare(b.name);
         });
-    }, [projects, searchQuery]);
+    }, [projects, searchQuery, projectSortOrder, filteredTasks, today, tasks]);
 
   return (
     <>

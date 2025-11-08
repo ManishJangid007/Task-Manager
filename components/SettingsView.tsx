@@ -2,15 +2,19 @@ import React, { useRef } from 'react';
 import { ArrowDownTrayIcon, ArrowUpTrayIcon } from './Icons';
 import { Switch } from './ui/switch';
 import { Label } from './ui/label';
+import { Select } from './ui/select';
+import { ProjectSortOrder } from '../types';
 
 interface SettingsViewProps {
   onExport: () => void;
   onImport: (event: React.ChangeEvent<HTMLInputElement>) => void;
   includeCompletedTasks: boolean;
   onIncludeCompletedTasksChange: (value: boolean) => void;
+  projectSortOrder: ProjectSortOrder;
+  onProjectSortOrderChange: (value: ProjectSortOrder) => void;
 }
 
-const SettingsView: React.FC<SettingsViewProps> = ({ onExport, onImport, includeCompletedTasks, onIncludeCompletedTasksChange }) => {
+const SettingsView: React.FC<SettingsViewProps> = ({ onExport, onImport, includeCompletedTasks, onIncludeCompletedTasksChange, projectSortOrder, onProjectSortOrderChange }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImportClick = () => {
@@ -24,20 +28,42 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onExport, onImport, include
       <div className="space-y-4">
         <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
           <h3 className="text-xl font-semibold text-foreground mb-4">Sidebar Preferences</h3>
-          <div className="flex items-center justify-between mb-6">
-            <div className="space-y-0.5">
-              <Label htmlFor="include-completed" className="text-sm font-medium text-foreground">
-                Include completed tasks in sidebar counts
-              </Label>
-              <p className="text-sm text-muted-foreground">
-                When enabled, sidebar task counts include all tasks. When disabled, only incomplete tasks are counted.
-              </p>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="include-completed" className="text-sm font-medium text-foreground">
+                  Include completed tasks in sidebar counts
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  When enabled, sidebar task counts include all tasks. When disabled, only incomplete tasks are counted.
+                </p>
+              </div>
+              <Switch
+                id="include-completed"
+                checked={includeCompletedTasks}
+                onCheckedChange={onIncludeCompletedTasksChange}
+              />
             </div>
-            <Switch
-              id="include-completed"
-              checked={includeCompletedTasks}
-              onCheckedChange={onIncludeCompletedTasksChange}
-            />
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="project-sort" className="text-sm font-medium text-foreground">
+                  How to sort projects
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Choose how projects are sorted in the sidebar. Pinned projects always appear first.
+                </p>
+              </div>
+              <Select
+                value={projectSortOrder}
+                onChange={(value) => onProjectSortOrderChange(value as ProjectSortOrder)}
+                options={[
+                  { value: 'alphabetical', label: 'Alphabetically' },
+                  { value: 'taskCount', label: 'By number of today\'s incomplete tasks' },
+                  { value: 'recentActivity', label: 'Most recently active' },
+                ]}
+                className="min-w-[280px]"
+              />
+            </div>
           </div>
         </div>
 

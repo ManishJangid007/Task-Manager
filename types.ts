@@ -16,3 +16,5 @@ export interface Project {
 export type View = 'daily' | 'reports' | 'settings' | { type: 'project'; id: string };
 
 export type ReportPeriod = 'day' | 'week' | 'month' | 'year';
+
+export type ProjectSortOrder = 'alphabetical' | 'taskCount' | 'recentActivity';
