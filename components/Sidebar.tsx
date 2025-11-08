@@ -161,7 +161,7 @@ const Sidebar: React.FC<SidebarProps> = ({ projects, tasks, view, setView, onAdd
             className={`w-full flex items-center justify-between px-4 py-2 text-sm font-medium rounded-md transition-colors ${view === 'daily' ? 'bg-primary text-primary-foreground' : 'text-foreground/80 hover:bg-muted'}`}
         >
             <div className="flex items-center">
-                <CalendarDaysIcon className="mr-3 w-5 h-5"/> Tasks by Date
+                <CalendarDaysIcon className="mr-3 w-5 h-5"/> All Tasks
             </div>
             <Badge count={todaysTaskCount} />
         </button>

@@ -86,7 +86,7 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, projects, onUpdateTask, on
   return (
     <div className="p-6 space-y-6">
        <div className="flex justify-between items-center">
-         <h2 className="text-3xl font-bold text-foreground">Tasks by Date</h2>
+         <h2 className="text-3xl font-bold text-foreground">All Tasks</h2>
          <div className="flex items-center gap-2">
            <div className="w-auto">
              <DatePicker
@@ -105,29 +105,55 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, projects, onUpdateTask, on
        </div>
 
        {sortedDates.length > 0 ? (
-        sortedDates.map(date => (
-          <div key={date}>
-            <div className="flex items-center mb-3">
-              <h3 className="text-xl font-semibold text-foreground">{getHumanReadableDate(date)}</h3>
-              <button onClick={() => copyDaysTasks(date)} className="ml-4 text-foreground/60 hover:text-primary transition-colors">
-                <ClipboardIcon />
-              </button>
-            </div>
-            <div className="space-y-2">
-              {groupedTasks[date].map(task => (
-                 <div key={task.id} className="pl-4 border-l-2 border-primary/30">
-                    <div className="text-xs text-primary font-medium mb-1">{getProjectName(task.projectId)}</div>
-                     <TaskItem
+        sortedDates.map(date => {
+          // Group tasks by project for this date
+          const tasksByProject = groupedTasks[date].reduce((acc, task) => {
+            if (!acc[task.projectId]) {
+              acc[task.projectId] = [];
+            }
+            acc[task.projectId].push(task);
+            return acc;
+          }, {} as Record<string, Task[]>);
+
+          // Get project IDs sorted by project name
+          const sortedProjectIds = Object.keys(tasksByProject).sort((a, b) => {
+            const nameA = getProjectName(a);
+            const nameB = getProjectName(b);
+            return nameA.localeCompare(nameB);
+          });
+
+          return (
+            <div key={date} className="space-y-4">
+              <div className="flex items-center mb-3">
+                <h3 className="text-xl font-semibold text-foreground">{getHumanReadableDate(date)}</h3>
+                <button onClick={() => copyDaysTasks(date)} className="ml-4 text-foreground/60 hover:text-primary transition-colors">
+                  <ClipboardIcon />
+                </button>
+              </div>
+              {sortedProjectIds.map(projectId => (
+                <div key={projectId} className="space-y-2">
+                  <h4 className="text-sm font-semibold text-foreground/80 ml-2 flex items-center gap-2">
+                    {getProjectName(projectId)}
+                    <span className="text-xs text-muted-foreground font-normal">
+                      ({tasksByProject[projectId].length})
+                    </span>
+                  </h4>
+                  <div className="space-y-1 pl-4">
+                    {tasksByProject[projectId].map(task => (
+                      <TaskItem
+                        key={task.id}
                         task={task}
                         onToggleComplete={handleToggleComplete}
                         onDelete={onDeleteTask}
                         onEdit={onEditTask}
-                    />
-                 </div>
+                      />
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
-          </div>
-        ))
+          );
+        })
        ) : (
         <div className="text-center py-10">
           <p className="text-muted-foreground">
