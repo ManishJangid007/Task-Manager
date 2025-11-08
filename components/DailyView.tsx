@@ -88,6 +88,50 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, projects, onUpdateTask, on
     }
   };
 
+  const expandAllProjects = (date: string, projectIds: string[]) => {
+    if (date === today) {
+      // For today: remove all from collapsed set
+      setCollapsedProjects(prev => {
+        const newSet = new Set(prev);
+        projectIds.forEach(projectId => {
+          newSet.delete(`${date}-${projectId}`);
+        });
+        return newSet;
+      });
+    } else {
+      // For other dates: add all to expanded set
+      setExpandedProjects(prev => {
+        const newSet = new Set(prev);
+        projectIds.forEach(projectId => {
+          newSet.add(`${date}-${projectId}`);
+        });
+        return newSet;
+      });
+    }
+  };
+
+  const collapseAllProjects = (date: string, projectIds: string[]) => {
+    if (date === today) {
+      // For today: add all to collapsed set
+      setCollapsedProjects(prev => {
+        const newSet = new Set(prev);
+        projectIds.forEach(projectId => {
+          newSet.add(`${date}-${projectId}`);
+        });
+        return newSet;
+      });
+    } else {
+      // For other dates: remove all from expanded set
+      setExpandedProjects(prev => {
+        const newSet = new Set(prev);
+        projectIds.forEach(projectId => {
+          newSet.delete(`${date}-${projectId}`);
+        });
+        return newSet;
+      });
+    }
+  };
+
   const getProjectName = (projectId: string) => {
     return projects.find(p => p.id === projectId)?.name || 'Unknown Project';
   };
@@ -175,12 +219,40 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, projects, onUpdateTask, on
             return nameA.localeCompare(nameB);
           });
 
+          // Check if all projects are collapsed for this date
+          const allCollapsed = sortedProjectIds.every(projectId => isProjectCollapsed(projectId, date));
+          const allExpanded = sortedProjectIds.every(projectId => !isProjectCollapsed(projectId, date));
+          
+          // Determine if we should show expand or collapse action
+          // If all are collapsed, show expand. Otherwise, show collapse.
+          const shouldExpand = allCollapsed;
+          
+          const toggleAllProjects = () => {
+            if (shouldExpand) {
+              expandAllProjects(date, sortedProjectIds);
+            } else {
+              collapseAllProjects(date, sortedProjectIds);
+            }
+          };
+
           return (
             <div key={date} className="space-y-4">
-              <div className="flex items-center mb-3">
+              <div className="flex items-center mb-3 gap-2">
                 <h3 className="text-xl font-semibold text-foreground">{getHumanReadableDate(date)}</h3>
-                <button onClick={() => copyDaysTasks(date)} className="ml-4 text-foreground/60 hover:text-primary transition-colors">
-                  <ClipboardIcon />
+                <button 
+                  onClick={toggleAllProjects} 
+                  className="text-foreground/60 hover:text-primary transition-colors p-1"
+                  title={shouldExpand ? "Expand all projects" : "Collapse all projects"}
+                  aria-label={shouldExpand ? "Expand all projects" : "Collapse all projects"}
+                >
+                  {shouldExpand ? (
+                    <ChevronDownIcon className="w-4 h-4" />
+                  ) : (
+                    <ChevronRightIcon className="w-4 h-4" />
+                  )}
+                </button>
+                <button onClick={() => copyDaysTasks(date)} className="text-foreground/60 hover:text-primary transition-colors p-1">
+                  <ClipboardIcon className="w-4 h-4" />
                 </button>
               </div>
               {sortedProjectIds.map(projectId => {
