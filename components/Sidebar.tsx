@@ -1,7 +1,7 @@
 
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useState } from 'react';
 import { Project, Task, View } from '../types';
-import { PlusIcon, CalendarDaysIcon, ChartBarIcon, FolderIcon, PencilIcon, TrashIcon, XMarkIcon, CogIcon } from './Icons';
+import { PlusIcon, CalendarDaysIcon, ChartBarIcon, FolderIcon, PencilIcon, TrashIcon, XMarkIcon, CogIcon, MagnifyingGlassIcon } from './Icons';
 import { ThemeToggle } from './ui/theme-toggle';
 import { Badge } from './ui/badge';
 import { getTodayDateString } from '../utils/dateUtils';
@@ -22,6 +22,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ projects, tasks, view, setView, onAddProject, onEditProject, onDeleteProject, onQuickAddTask, includeCompletedTasks, isOpen, onClose }) => {
     const activeProject = typeof view === 'object' && view.type === 'project' ? view.id : null;
+    const [searchQuery, setSearchQuery] = useState('');
 
     const today = getTodayDateString();
     
@@ -47,6 +48,17 @@ const Sidebar: React.FC<SidebarProps> = ({ projects, tasks, view, setView, onAdd
         });
         return counts;
     }, [projects, filteredTasks, today]);
+
+    // Filter projects based on search query
+    const filteredProjects = useMemo(() => {
+        if (!searchQuery.trim()) {
+            return projects;
+        }
+        const query = searchQuery.toLowerCase().trim();
+        return projects.filter(project => 
+            project.name.toLowerCase().includes(query)
+        );
+    }, [projects, searchQuery]);
 
   return (
     <>
@@ -109,8 +121,32 @@ const Sidebar: React.FC<SidebarProps> = ({ projects, tasks, view, setView, onAdd
                 <PlusIcon className="w-5 h-5" />
             </button>
         </div>
+        {/* Search Input */}
+        <div className="relative mb-3">
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search projects..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 text-sm bg-background border border-border rounded-md placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-foreground"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <XMarkIcon className="w-4 h-4" />
+            </button>
+          )}
+        </div>
         <ul className="space-y-1">
-          {projects.map(project => (
+          {filteredProjects.length === 0 ? (
+            <li className="px-4 py-2 text-sm text-muted-foreground text-center">
+              {searchQuery ? 'No projects found' : 'No projects yet'}
+            </li>
+          ) : (
+            filteredProjects.map(project => (
             <li key={project.id} className="group">
                <div className="flex items-center justify-between">
                 <a
@@ -134,7 +170,8 @@ const Sidebar: React.FC<SidebarProps> = ({ projects, tasks, view, setView, onAdd
                 </div>
               </div>
             </li>
-          ))}
+            ))
+          )}
         </ul>
       </div>
 
