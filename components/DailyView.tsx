@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Task, Project } from '../types';
 import TaskItem from './TaskItem';
 import { getHumanReadableDate, getTodayDateString } from '../utils/dateUtils';
-import { ClipboardIcon, XCircleIcon } from './Icons';
+import { ClipboardIcon, XCircleIcon, ChevronDownIcon, ChevronRightIcon } from './Icons';
 import { DatePicker } from './ui/date-picker';
 
 interface DailyViewProps {
@@ -16,6 +16,7 @@ interface DailyViewProps {
 
 const DailyView: React.FC<DailyViewProps> = ({ tasks, projects, onUpdateTask, onDeleteTask, onEditTask, setNotification }) => {
   const [filterDate, setFilterDate] = useState('');
+  const [collapsedProjects, setCollapsedProjects] = useState<Set<string>>(new Set());
 
   const groupedTasks = useMemo(() => {
     return tasks.reduce((acc, task) => {
@@ -34,6 +35,32 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, projects, onUpdateTask, on
       if (!filterDate) return allSortedDates;
       return allSortedDates.filter(date => date === filterDate);
   }, [groupedTasks, filterDate]);
+
+  const today = getTodayDateString();
+  
+  // Check if a project is collapsed for a specific date
+  // Projects in today's date are expanded by default, others are collapsed
+  const isProjectCollapsed = (projectId: string, date: string) => {
+    const projectDateKey = `${date}-${projectId}`;
+    // If not in the set, check if it's today (today's projects should be expanded by default)
+    if (!collapsedProjects.has(projectDateKey)) {
+      return date !== today;
+    }
+    return collapsedProjects.has(projectDateKey);
+  };
+
+  const toggleProjectCollapse = (projectId: string, date: string) => {
+    const projectDateKey = `${date}-${projectId}`;
+    setCollapsedProjects(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(projectDateKey)) {
+        newSet.delete(projectDateKey);
+      } else {
+        newSet.add(projectDateKey);
+      }
+      return newSet;
+    });
+  };
 
   const getProjectName = (projectId: string) => {
     return projects.find(p => p.id === projectId)?.name || 'Unknown Project';
@@ -130,27 +157,40 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, projects, onUpdateTask, on
                   <ClipboardIcon />
                 </button>
               </div>
-              {sortedProjectIds.map(projectId => (
-                <div key={projectId} className="space-y-2">
-                  <h4 className="text-sm font-semibold text-foreground/80 ml-2 flex items-center gap-2">
-                    {getProjectName(projectId)}
-                    <span className="text-xs text-muted-foreground font-normal">
-                      ({tasksByProject[projectId].length})
-                    </span>
-                  </h4>
-                  <div className="space-y-1 pl-4">
-                    {tasksByProject[projectId].map(task => (
-                      <TaskItem
-                        key={task.id}
-                        task={task}
-                        onToggleComplete={handleToggleComplete}
-                        onDelete={onDeleteTask}
-                        onEdit={onEditTask}
-                      />
-                    ))}
+              {sortedProjectIds.map(projectId => {
+                const isCollapsed = isProjectCollapsed(projectId, date);
+                return (
+                  <div key={projectId} className="space-y-2">
+                    <button
+                      onClick={() => toggleProjectCollapse(projectId, date)}
+                      className="text-sm font-semibold text-foreground/80 pl-4 border-l-2 border-primary/30 flex items-center gap-2 w-full text-left hover:text-primary transition-colors"
+                    >
+                      {isCollapsed ? (
+                        <ChevronRightIcon className="w-4 h-4 flex-shrink-0" />
+                      ) : (
+                        <ChevronDownIcon className="w-4 h-4 flex-shrink-0" />
+                      )}
+                      {getProjectName(projectId)}
+                      <span className="text-xs text-muted-foreground font-normal">
+                        ({tasksByProject[projectId].length})
+                      </span>
+                    </button>
+                    {!isCollapsed && (
+                      <div className="space-y-1 pl-4">
+                        {tasksByProject[projectId].map(task => (
+                          <TaskItem
+                            key={task.id}
+                            task={task}
+                            onToggleComplete={handleToggleComplete}
+                            onDelete={onDeleteTask}
+                            onEdit={onEditTask}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           );
         })
