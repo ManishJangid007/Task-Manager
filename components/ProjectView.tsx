@@ -25,17 +25,28 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, tasks, onAddTask, on
     }
   };
 
-  const copyTodaysTasks = () => {
-    const today = getTodayDateString();
-    const todaysTasks = tasks.filter(task => task.date === today);
-    if (todaysTasks.length === 0) {
-        setNotification("No tasks for today to copy.");
+  const copyDaysTasks = (date: string) => {
+    const dayTasks = groupedTasks[date];
+    if (!dayTasks || dayTasks.length === 0) {
+        setNotification("No tasks for this day to copy.");
         return;
     }
-    const taskList = todaysTasks.map(task => `    - ${task.title}`).join('\n');
-    const content = `Today's task\n${taskList}`;
-    navigator.clipboard.writeText(content);
-    setNotification(`Copied ${todaysTasks.length} task(s) for today!`);
+
+    const dateObj = new Date(date + 'T00:00:00');
+    const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+    const dayOfMonth = dateObj.getDate().toString().padStart(2, '0');
+    const year = dateObj.getFullYear();
+    const formattedDate = `${month}-${dayOfMonth}-${year}`;
+    
+    const isToday = date === getTodayDateString();
+    let content = isToday ? `Today's tasks [${formattedDate}]\n` : `Date [${formattedDate}]\n`;
+    
+    dayTasks.forEach(task => {
+        content += `    - ${task.title}\n`;
+    });
+
+    navigator.clipboard.writeText(content.trim());
+    setNotification(`Copied ${dayTasks.length} task(s) for ${getHumanReadableDate(date)}!`);
   };
 
   const filteredTasks = useMemo(() => {
@@ -78,14 +89,6 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, tasks, onAddTask, on
             )}
           </div>
           <button 
-            onClick={copyTodaysTasks} 
-            className="flex items-center justify-center px-3 sm:px-4 py-2 h-9 text-xs sm:text-sm bg-card border border-border rounded-md shadow-sm hover:bg-muted text-foreground transition-colors whitespace-nowrap w-full sm:w-auto"
-          >
-            <ClipboardIcon className="mr-2 w-4 h-4 flex-shrink-0"/> 
-            <span className="hidden sm:inline">Copy Today's Tasks</span>
-            <span className="sm:hidden">Copy Today</span>
-          </button>
-          <button 
             onClick={() => onAddTask(project.id)} 
             className="flex items-center justify-center px-3 sm:px-4 py-2 h-9 text-xs sm:text-sm bg-primary text-primary-foreground rounded-md shadow-sm hover:bg-primary/90 transition-colors whitespace-nowrap w-full sm:w-auto"
           >
@@ -98,9 +101,16 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, tasks, onAddTask, on
         <div className="space-y-6">
           {sortedDates.map(date => (
             <div key={date}>
-              <h3 className="text-lg font-semibold text-foreground mb-3 border-b border-border pb-2">
-                {getHumanReadableDate(date)}
-              </h3>
+              <div className="flex items-center mb-3 border-b border-border pb-2">
+                <h3 className="text-lg font-semibold text-foreground">{getHumanReadableDate(date)}</h3>
+                <button 
+                  onClick={() => copyDaysTasks(date)} 
+                  className="ml-4 text-foreground/60 hover:text-primary transition-colors"
+                  aria-label={`Copy tasks for ${getHumanReadableDate(date)}`}
+                >
+                  <ClipboardIcon className="w-5 h-5" />
+                </button>
+              </div>
               <div className="space-y-2">
                 {groupedTasks[date].map(task => (
                   <TaskItem
