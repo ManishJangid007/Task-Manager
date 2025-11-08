@@ -34,6 +34,10 @@ const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onC
   };
 
   const handleRemoveRow = (id: number) => {
+    // Prevent deleting the last row
+    if (taskRows.length <= 1) {
+      return;
+    }
     setTaskRows(taskRows.filter(row => row.id !== id));
   };
 
@@ -72,8 +76,8 @@ const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onC
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-      <div className="max-h-[60vh] sm:max-h-[500px] overflow-y-auto pr-2 space-y-3 sm:space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto pr-2 space-y-3 sm:space-y-4 min-h-0">
         {taskRows.map((row, index) => (
           <div key={row.id} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
             <select
@@ -98,24 +102,31 @@ const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onC
             <button 
               type="button" 
               onClick={() => handleRemoveRow(row.id)} 
-              className="self-start sm:self-auto px-3 py-2.5 sm:px-2 sm:py-1 text-foreground/60 hover:text-destructive transition-colors rounded-md hover:bg-muted"
+              disabled={taskRows.length <= 1}
+              className={`self-start sm:self-auto px-3 py-2.5 sm:px-2 sm:py-1 rounded-md transition-colors ${
+                taskRows.length <= 1
+                  ? 'text-foreground/20 cursor-not-allowed opacity-50'
+                  : 'text-foreground/60 hover:text-destructive hover:bg-muted'
+              }`}
               aria-label="Remove task"
+              title={taskRows.length <= 1 ? 'At least one task row is required' : 'Remove task'}
             >
               <TrashIcon className="w-5 h-5" />
             </button>
           </div>
         ))}
       </div>
-      <button
-        type="button"
-        onClick={handleAddRow}
-        className="w-full flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-2 text-sm font-medium rounded-md text-primary bg-muted hover:bg-muted/80 transition-colors"
-      >
-        <PlusIcon className="w-5 h-5 mr-2" />
-        Add Another Task
-      </button>
+      <div className="flex-shrink-0 space-y-4">
+        <button
+          type="button"
+          onClick={handleAddRow}
+          className="w-full flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-2 text-sm font-medium rounded-md text-primary bg-muted hover:bg-muted/80 transition-colors"
+        >
+          <PlusIcon className="w-5 h-5 mr-2" />
+          Add Another Task
+        </button>
 
-      <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-4 border-t border-border">
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-4 border-t border-border">
         <button
           type="button"
           onClick={onCancel}
@@ -129,6 +140,7 @@ const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onC
         >
           Add All Tasks
         </button>
+      </div>
       </div>
     </form>
   );

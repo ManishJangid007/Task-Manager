@@ -16,13 +16,13 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 
   const paddingClass = size === 'large' ? 'p-4 sm:p-6' : 'p-4';
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 overflow-y-auto">
-      <div className={`bg-card border border-border rounded-lg shadow-xl w-full ${maxWidthClass} my-4 sm:my-8`}>
-        <div className={`${paddingClass} border-b border-border flex items-center justify-between`}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-start sm:items-center p-0 sm:p-4 overflow-y-auto">
+      <div className={`bg-card border border-border rounded-none sm:rounded-lg shadow-xl w-full ${maxWidthClass} min-h-full sm:min-h-0 sm:my-4 sm:my-8 sm:max-h-[90vh] flex flex-col`}>
+        <div className={`${paddingClass} border-b border-border flex items-center justify-between flex-shrink-0`}>
           <h3 className="text-lg sm:text-xl font-semibold text-foreground">{title}</h3>
           <button
             onClick={onClose}
-            className="text-foreground/60 hover:text-foreground transition-colors p-1"
+            className="text-foreground/60 hover:text-foreground transition-colors p-1 sm:p-1"
             aria-label="Close"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -30,7 +30,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 
             </svg>
           </button>
         </div>
-        <div className={paddingClass}>
+        <div className={`${paddingClass} flex-1 overflow-y-auto`}>
           {children}
         </div>
       </div>
