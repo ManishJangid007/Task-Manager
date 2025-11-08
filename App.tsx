@@ -139,6 +139,7 @@ function App() {
   const [tasks, setTasks] = useLocalStorage<Task[]>('tasks', []);
   const [includeCompletedTasks, setIncludeCompletedTasks] = useLocalStorage<boolean>('includeCompletedTasks', true);
   const [projectSortOrder, setProjectSortOrder] = useLocalStorage<ProjectSortOrder>('projectSortOrder', 'alphabetical');
+  const [askForTaskDeleteConfirmation, setAskForTaskDeleteConfirmation] = useLocalStorage<boolean>('askForTaskDeleteConfirmation', true);
   const [view, setView] = useState<View>('daily');
   const [notification, setNotification] = useState<string>('');
   const [modalState, setModalState] = useState<ModalState>(null);
@@ -249,7 +250,11 @@ function App() {
   };
 
   const handleDeleteTask = (taskId: string) => {
-    setDeleteDialog({ type: 'task', id: taskId });
+    if (askForTaskDeleteConfirmation) {
+      setDeleteDialog({ type: 'task', id: taskId });
+    } else {
+      setTasks(tasks.filter(task => task.id !== taskId));
+    }
   };
 
   const confirmDeleteTask = (taskId: string) => {
@@ -305,7 +310,7 @@ function App() {
       return <ReportsView tasks={tasks} projects={projects} />;
     }
     if (view === 'settings') {
-      return <SettingsView onExport={handleExport} onImport={handleImport} includeCompletedTasks={includeCompletedTasks} onIncludeCompletedTasksChange={setIncludeCompletedTasks} projectSortOrder={projectSortOrder} onProjectSortOrderChange={setProjectSortOrder} />;
+      return <SettingsView onExport={handleExport} onImport={handleImport} includeCompletedTasks={includeCompletedTasks} onIncludeCompletedTasksChange={setIncludeCompletedTasks} projectSortOrder={projectSortOrder} onProjectSortOrderChange={setProjectSortOrder} askForTaskDeleteConfirmation={askForTaskDeleteConfirmation} onAskForTaskDeleteConfirmationChange={setAskForTaskDeleteConfirmation} />;
     }
     if (typeof view === 'object' && view.type === 'project') {
       const project = projects.find(p => p.id === view.id);

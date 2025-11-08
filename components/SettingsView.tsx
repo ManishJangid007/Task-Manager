@@ -12,9 +12,11 @@ interface SettingsViewProps {
   onIncludeCompletedTasksChange: (value: boolean) => void;
   projectSortOrder: ProjectSortOrder;
   onProjectSortOrderChange: (value: ProjectSortOrder) => void;
+  askForTaskDeleteConfirmation: boolean;
+  onAskForTaskDeleteConfirmationChange: (value: boolean) => void;
 }
 
-const SettingsView: React.FC<SettingsViewProps> = ({ onExport, onImport, includeCompletedTasks, onIncludeCompletedTasksChange, projectSortOrder, onProjectSortOrderChange }) => {
+const SettingsView: React.FC<SettingsViewProps> = ({ onExport, onImport, includeCompletedTasks, onIncludeCompletedTasksChange, projectSortOrder, onProjectSortOrderChange, askForTaskDeleteConfirmation, onAskForTaskDeleteConfirmationChange }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImportClick = () => {
@@ -65,6 +67,29 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onExport, onImport, include
                     { value: 'recentActivity', label: 'Most recently active' },
                   ]}
                   className="w-full sm:min-w-[280px]"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-card border border-border rounded-lg p-4 sm:p-6 shadow-sm">
+          <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-4">Task Preferences</h3>
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="space-y-0.5 flex-1">
+                <Label htmlFor="ask-delete-confirmation" className="text-sm font-medium text-foreground">
+                  Ask for delete confirmation
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  When enabled, a confirmation dialog will appear before deleting tasks. When disabled, tasks will be deleted immediately.
+                </p>
+              </div>
+              <div className="flex-shrink-0">
+                <Switch
+                  id="ask-delete-confirmation"
+                  checked={askForTaskDeleteConfirmation}
+                  onCheckedChange={onAskForTaskDeleteConfirmationChange}
                 />
               </div>
             </div>
