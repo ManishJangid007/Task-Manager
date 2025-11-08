@@ -29,6 +29,13 @@ const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onC
   }, [taskRows.length]);
 
   const handleAddRow = () => {
+    // Don't add a new row if the last row's title is empty
+    if (taskRows.length > 0) {
+      const lastRow = taskRows[taskRows.length - 1];
+      if (!lastRow.title.trim()) {
+        return;
+      }
+    }
     const lastProject = taskRows.length > 0 ? taskRows[taskRows.length - 1].projectId : projects[0]?.id || '';
     setTaskRows([...taskRows, { id: Date.now(), title: '', projectId: lastProject }]);
   };
@@ -47,10 +54,14 @@ const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onC
     );
   };
   
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, rowIndex: number) => {
     if (e.key === 'Enter') {
-      e.preventDefault();
-      handleAddRow();
+      // Only add a new row if the current row's title is not empty
+      const currentRow = taskRows[rowIndex];
+      if (currentRow.title.trim()) {
+        e.preventDefault();
+        handleAddRow();
+      }
     }
   };
 
@@ -96,7 +107,7 @@ const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onC
               placeholder="Task title..."
               value={row.title}
               onChange={(e) => handleRowChange(row.id, 'title', e.target.value)}
-              onKeyDown={handleKeyDown}
+              onKeyDown={(e) => handleKeyDown(e, index)}
               className="flex-1 px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-sm bg-card border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-foreground"
             />
             <button 
@@ -120,7 +131,13 @@ const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onC
         <button
           type="button"
           onClick={handleAddRow}
-          className="w-full flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-2 text-sm font-medium rounded-md text-primary bg-muted hover:bg-muted/80 transition-colors"
+          disabled={taskRows.length > 0 && !taskRows[taskRows.length - 1].title.trim()}
+          className={`w-full flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-2 text-sm font-medium rounded-md transition-colors ${
+            taskRows.length > 0 && !taskRows[taskRows.length - 1].title.trim()
+              ? 'text-foreground/40 bg-muted/50 cursor-not-allowed opacity-50'
+              : 'text-primary bg-muted hover:bg-muted/80'
+          }`}
+          title={taskRows.length > 0 && !taskRows[taskRows.length - 1].title.trim() ? 'Please fill in the task title above before adding another' : 'Add another task'}
         >
           <PlusIcon className="w-5 h-5 mr-2" />
           Add Another Task
