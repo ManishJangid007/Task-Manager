@@ -186,6 +186,12 @@ function App() {
     setDeleteDialog(null);
   };
 
+  const handleTogglePin = (projectId: string) => {
+    setProjects(projects.map(p =>
+      p.id === projectId ? { ...p, pinned: !p.pinned } : p
+    ));
+  };
+
   const handleCreateTask = (title: string, projectId: string, date: string) => {
     if (title && title.trim() !== '') {
       const newTask: Task = {
@@ -366,6 +372,7 @@ function App() {
         onAddProject={handleAddProjectClick}
         onEditProject={handleEditProjectClick}
         onDeleteProject={handleDeleteProject}
+        onTogglePin={handleTogglePin}
         onQuickAddTask={handleQuickAddTaskClick}
         includeCompletedTasks={includeCompletedTasks}
         isOpen={sidebarOpen}

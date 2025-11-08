@@ -1,10 +1,17 @@
 
 import React, { useRef, useMemo, useState } from 'react';
 import { Project, Task, View } from '../types';
-import { PlusIcon, CalendarDaysIcon, ChartBarIcon, FolderIcon, PencilIcon, TrashIcon, XMarkIcon, CogIcon, MagnifyingGlassIcon } from './Icons';
+import { PlusIcon, CalendarDaysIcon, ChartBarIcon, FolderIcon, PencilIcon, TrashIcon, XMarkIcon, CogIcon, MagnifyingGlassIcon, PinIcon, EllipsisVerticalIcon } from './Icons';
 import { ThemeToggle } from './ui/theme-toggle';
 import { Badge } from './ui/badge';
 import { getTodayDateString } from '../utils/dateUtils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
 
 interface SidebarProps {
   projects: Project[];
@@ -14,13 +21,14 @@ interface SidebarProps {
   onAddProject: () => void;
   onEditProject: (project: Project) => void;
   onDeleteProject: (projectId: string) => void;
+  onTogglePin: (projectId: string) => void;
   onQuickAddTask: () => void;
   includeCompletedTasks: boolean;
   isOpen?: boolean;
   onClose?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ projects, tasks, view, setView, onAddProject, onEditProject, onDeleteProject, onQuickAddTask, includeCompletedTasks, isOpen, onClose }) => {
+const Sidebar: React.FC<SidebarProps> = ({ projects, tasks, view, setView, onAddProject, onEditProject, onDeleteProject, onTogglePin, onQuickAddTask, includeCompletedTasks, isOpen, onClose }) => {
     const activeProject = typeof view === 'object' && view.type === 'project' ? view.id : null;
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -49,15 +57,28 @@ const Sidebar: React.FC<SidebarProps> = ({ projects, tasks, view, setView, onAdd
         return counts;
     }, [projects, filteredTasks, today]);
 
-    // Filter projects based on search query
+    // Filter and sort projects based on search query and pinned status
     const filteredProjects = useMemo(() => {
-        if (!searchQuery.trim()) {
-            return projects;
+        let filtered = projects;
+        
+        // Filter by search query
+        if (searchQuery.trim()) {
+            const query = searchQuery.toLowerCase().trim();
+            filtered = projects.filter(project => 
+                project.name.toLowerCase().includes(query)
+            );
         }
-        const query = searchQuery.toLowerCase().trim();
-        return projects.filter(project => 
-            project.name.toLowerCase().includes(query)
-        );
+        
+        // Sort: pinned projects first, then by name
+        return [...filtered].sort((a, b) => {
+            const aPinned = a.pinned ?? false;
+            const bPinned = b.pinned ?? false;
+            
+            if (aPinned && !bPinned) return -1;
+            if (!aPinned && bPinned) return 1;
+            
+            return a.name.localeCompare(b.name);
+        });
     }, [projects, searchQuery]);
 
   return (
@@ -155,19 +176,39 @@ const Sidebar: React.FC<SidebarProps> = ({ projects, tasks, view, setView, onAdd
                   className={`flex-grow flex items-center justify-between px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeProject === project.id ? 'bg-primary text-primary-foreground' : 'text-foreground/80 hover:bg-muted'}`}
                 >
                   <div className="flex items-center min-w-0">
+                    {project.pinned && (
+                      <PinIcon className={`mr-2 w-4 h-4 flex-shrink-0 ${activeProject === project.id ? 'text-primary-foreground' : 'text-primary'}`} />
+                    )}
                     <FolderIcon className="mr-3 w-5 h-5 flex-shrink-0" />
                     <span className="truncate">{project.name}</span>
                   </div>
                   <Badge count={projectTodayCounts[project.id] || 0} className="ml-2 flex-shrink-0" />
                 </a>
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center pr-2">
-                    <button onClick={() => onEditProject(project)} className="p-1 text-foreground/60 hover:text-primary transition-colors">
-                        <PencilIcon className="w-4 h-4" />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-foreground/60 hover:text-foreground focus:opacity-100 focus:outline-none">
+                      <EllipsisVerticalIcon className="w-4 h-4" />
                     </button>
-                    <button onClick={() => onDeleteProject(project.id)} className="p-1 text-foreground/60 hover:text-destructive transition-colors">
-                        <TrashIcon className="w-4 h-4" />
-                    </button>
-                </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-40">
+                    <DropdownMenuItem onClick={() => onTogglePin(project.id)}>
+                      <PinIcon className="mr-2 w-4 h-4" />
+                      {project.pinned ? 'Unpin' : 'Pin'}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => onEditProject(project)}>
+                      <PencilIcon className="mr-2 w-4 h-4" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => onDeleteProject(project.id)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <TrashIcon className="mr-2 w-4 h-4" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </li>
             ))

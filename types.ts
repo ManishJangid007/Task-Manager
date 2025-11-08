@@ -10,6 +10,7 @@ export interface Task {
 export interface Project {
   id: string;
   name: string;
+  pinned?: boolean;
 }
 
 export type View = 'daily' | 'reports' | 'settings' | { type: 'project'; id: string };
