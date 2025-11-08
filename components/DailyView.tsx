@@ -16,7 +16,8 @@ interface DailyViewProps {
 
 const DailyView: React.FC<DailyViewProps> = ({ tasks, projects, onUpdateTask, onDeleteTask, onEditTask, setNotification }) => {
   const [filterDate, setFilterDate] = useState('');
-  // Track explicitly expanded projects (for non-today dates) and explicitly collapsed projects (for today)
+  // Track user's explicit state: collapsed projects (for today) and expanded projects (for other dates)
+  const [collapsedProjects, setCollapsedProjects] = useState<Set<string>>(new Set());
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
 
   const groupedTasks = useMemo(() => {
@@ -40,15 +41,16 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, projects, onUpdateTask, on
   const today = getTodayDateString();
   
   // Check if a project is collapsed for a specific date
-  // Projects in today's date are expanded by default, others are collapsed
+  // Default: today's projects are expanded, other dates' projects are collapsed
+  // User can toggle any project regardless of date
   const isProjectCollapsed = (projectId: string, date: string) => {
     const projectDateKey = `${date}-${projectId}`;
     
     if (date === today) {
-      // For today: default is expanded, so if it's in the set, it's collapsed
-      return expandedProjects.has(projectDateKey);
+      // For today: default is expanded, so if it's in collapsed set, it's collapsed
+      return collapsedProjects.has(projectDateKey);
     } else {
-      // For other dates: default is collapsed, so if it's NOT in the set, it's collapsed
+      // For other dates: default is collapsed, so if it's NOT in expanded set, it's collapsed
       return !expandedProjects.has(projectDateKey);
     }
   };
@@ -57,17 +59,33 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, projects, onUpdateTask, on
     const projectDateKey = `${date}-${projectId}`;
     const currentlyCollapsed = isProjectCollapsed(projectId, date);
     
-    setExpandedProjects(prev => {
-      const newSet = new Set(prev);
-      if (currentlyCollapsed) {
-        // If currently collapsed, add it to expand
-        newSet.add(projectDateKey);
-      } else {
-        // If currently expanded, remove it to collapse
-        newSet.delete(projectDateKey);
-      }
-      return newSet;
-    });
+    if (date === today) {
+      // For today: toggle in collapsed set
+      setCollapsedProjects(prev => {
+        const newSet = new Set(prev);
+        if (currentlyCollapsed) {
+          // If currently collapsed, remove from set to expand
+          newSet.delete(projectDateKey);
+        } else {
+          // If currently expanded, add to set to collapse
+          newSet.add(projectDateKey);
+        }
+        return newSet;
+      });
+    } else {
+      // For other dates: toggle in expanded set
+      setExpandedProjects(prev => {
+        const newSet = new Set(prev);
+        if (currentlyCollapsed) {
+          // If currently collapsed, add to set to expand
+          newSet.add(projectDateKey);
+        } else {
+          // If currently expanded, remove from set to collapse
+          newSet.delete(projectDateKey);
+        }
+        return newSet;
+      });
+    }
   };
 
   const getProjectName = (projectId: string) => {
