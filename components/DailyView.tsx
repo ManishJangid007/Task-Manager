@@ -16,7 +16,8 @@ interface DailyViewProps {
 
 const DailyView: React.FC<DailyViewProps> = ({ tasks, projects, onUpdateTask, onDeleteTask, onEditTask, setNotification }) => {
   const [filterDate, setFilterDate] = useState('');
-  const [collapsedProjects, setCollapsedProjects] = useState<Set<string>>(new Set());
+  // Track explicitly expanded projects (for non-today dates) and explicitly collapsed projects (for today)
+  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
 
   const groupedTasks = useMemo(() => {
     return tasks.reduce((acc, task) => {
@@ -42,21 +43,28 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, projects, onUpdateTask, on
   // Projects in today's date are expanded by default, others are collapsed
   const isProjectCollapsed = (projectId: string, date: string) => {
     const projectDateKey = `${date}-${projectId}`;
-    // If not in the set, check if it's today (today's projects should be expanded by default)
-    if (!collapsedProjects.has(projectDateKey)) {
-      return date !== today;
+    
+    if (date === today) {
+      // For today: default is expanded, so if it's in the set, it's collapsed
+      return expandedProjects.has(projectDateKey);
+    } else {
+      // For other dates: default is collapsed, so if it's NOT in the set, it's collapsed
+      return !expandedProjects.has(projectDateKey);
     }
-    return collapsedProjects.has(projectDateKey);
   };
 
   const toggleProjectCollapse = (projectId: string, date: string) => {
     const projectDateKey = `${date}-${projectId}`;
-    setCollapsedProjects(prev => {
+    const currentlyCollapsed = isProjectCollapsed(projectId, date);
+    
+    setExpandedProjects(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(projectDateKey)) {
-        newSet.delete(projectDateKey);
-      } else {
+      if (currentlyCollapsed) {
+        // If currently collapsed, add it to expand
         newSet.add(projectDateKey);
+      } else {
+        // If currently expanded, remove it to collapse
+        newSet.delete(projectDateKey);
       }
       return newSet;
     });
