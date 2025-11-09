@@ -21,7 +21,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onToggleComplete, onDelete, o
       case 'low':
         return 'bg-muted text-muted-foreground';
       default:
-        return 'bg-muted text-muted-foreground';
+        return 'bg-yellow-500 text-white'; // Default to medium priority color
     }
   };
 
@@ -49,11 +49,9 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onToggleComplete, onDelete, o
         {task.title}
       </span>
       <div className="flex items-center space-x-2">
-        {task.priority && (
-          <span className={`${getPriorityBadgeColor(task.priority)} text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap`}>
-            {getPriorityLabel(task.priority)}
-          </span>
-        )}
+        <span className={`${getPriorityBadgeColor(task.priority)} text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap`}>
+          {getPriorityLabel(task.priority)}
+        </span>
         <button onClick={() => onEdit(task)} className="text-foreground/60 hover:text-primary transition-colors">
           <PencilIcon />
         </button>
