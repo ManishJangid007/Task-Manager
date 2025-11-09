@@ -14,9 +14,11 @@ interface SettingsViewProps {
   onProjectSortOrderChange: (value: ProjectSortOrder) => void;
   askForTaskDeleteConfirmation: boolean;
   onAskForTaskDeleteConfirmationChange: (value: boolean) => void;
+  defaultIncludeDateInCopy: boolean;
+  onDefaultIncludeDateInCopyChange: (value: boolean) => void;
 }
 
-const SettingsView: React.FC<SettingsViewProps> = ({ onExport, onImport, includeCompletedTasks, onIncludeCompletedTasksChange, projectSortOrder, onProjectSortOrderChange, askForTaskDeleteConfirmation, onAskForTaskDeleteConfirmationChange }) => {
+const SettingsView: React.FC<SettingsViewProps> = ({ onExport, onImport, includeCompletedTasks, onIncludeCompletedTasksChange, projectSortOrder, onProjectSortOrderChange, askForTaskDeleteConfirmation, onAskForTaskDeleteConfirmationChange, defaultIncludeDateInCopy, onDefaultIncludeDateInCopyChange }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImportClick = () => {
@@ -90,6 +92,23 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onExport, onImport, include
                   id="ask-delete-confirmation"
                   checked={askForTaskDeleteConfirmation}
                   onCheckedChange={onAskForTaskDeleteConfirmationChange}
+                />
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="space-y-0.5 flex-1">
+                <Label htmlFor="default-include-date" className="text-sm font-medium text-foreground">
+                  Default include date in copy
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  When enabled, the "Include date" toggle will be on by default when opening the copy modal. When disabled, it will be off by default.
+                </p>
+              </div>
+              <div className="flex-shrink-0">
+                <Switch
+                  id="default-include-date"
+                  checked={defaultIncludeDateInCopy}
+                  onCheckedChange={onDefaultIncludeDateInCopyChange}
                 />
               </div>
             </div>

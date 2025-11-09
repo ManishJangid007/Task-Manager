@@ -140,6 +140,7 @@ function App() {
   const [includeCompletedTasks, setIncludeCompletedTasks] = useLocalStorage<boolean>('includeCompletedTasks', true);
   const [projectSortOrder, setProjectSortOrder] = useLocalStorage<ProjectSortOrder>('projectSortOrder', 'alphabetical');
   const [askForTaskDeleteConfirmation, setAskForTaskDeleteConfirmation] = useLocalStorage<boolean>('askForTaskDeleteConfirmation', true);
+  const [defaultIncludeDateInCopy, setDefaultIncludeDateInCopy] = useLocalStorage<boolean>('defaultIncludeDateInCopy', true);
   const [view, setView] = useState<View>('daily');
   const [notification, setNotification] = useState<string>('');
   const [modalState, setModalState] = useState<ModalState>(null);
@@ -310,7 +311,7 @@ function App() {
       return <ReportsView tasks={tasks} projects={projects} />;
     }
     if (view === 'settings') {
-      return <SettingsView onExport={handleExport} onImport={handleImport} includeCompletedTasks={includeCompletedTasks} onIncludeCompletedTasksChange={setIncludeCompletedTasks} projectSortOrder={projectSortOrder} onProjectSortOrderChange={setProjectSortOrder} askForTaskDeleteConfirmation={askForTaskDeleteConfirmation} onAskForTaskDeleteConfirmationChange={setAskForTaskDeleteConfirmation} />;
+      return <SettingsView onExport={handleExport} onImport={handleImport} includeCompletedTasks={includeCompletedTasks} onIncludeCompletedTasksChange={setIncludeCompletedTasks} projectSortOrder={projectSortOrder} onProjectSortOrderChange={setProjectSortOrder} askForTaskDeleteConfirmation={askForTaskDeleteConfirmation} onAskForTaskDeleteConfirmationChange={setAskForTaskDeleteConfirmation} defaultIncludeDateInCopy={defaultIncludeDateInCopy} onDefaultIncludeDateInCopyChange={setDefaultIncludeDateInCopy} />;
     }
     if (typeof view === 'object' && view.type === 'project') {
       const project = projects.find(p => p.id === view.id);
@@ -319,7 +320,7 @@ function App() {
         return null;
       }
       const projectTasks = tasks.filter(t => t.projectId === project.id);
-      return <ProjectView project={project} tasks={projectTasks} onAddTask={handleAddTaskClick} onUpdateTask={handleUpdateTask} onDeleteTask={handleDeleteTask} onEditTask={handleEditTaskClick} setNotification={setNotification} />;
+      return <ProjectView project={project} tasks={projectTasks} onAddTask={handleAddTaskClick} onUpdateTask={handleUpdateTask} onDeleteTask={handleDeleteTask} onEditTask={handleEditTaskClick} setNotification={setNotification} defaultIncludeDateInCopy={defaultIncludeDateInCopy} />;
     }
     return null;
   };

@@ -15,9 +15,10 @@ interface ProjectViewProps {
   onDeleteTask: (taskId: string) => void;
   onEditTask: (task: Task) => void;
   setNotification: (message: string) => void;
+  defaultIncludeDateInCopy: boolean;
 }
 
-const ProjectView: React.FC<ProjectViewProps> = ({ project, tasks, onAddTask, onUpdateTask, onDeleteTask, onEditTask, setNotification }) => {
+const ProjectView: React.FC<ProjectViewProps> = ({ project, tasks, onAddTask, onUpdateTask, onDeleteTask, onEditTask, setNotification, defaultIncludeDateInCopy }) => {
   const [filterDate, setFilterDate] = useState('');
   const [copyModalDate, setCopyModalDate] = useState<string | null>(null);
   
@@ -135,6 +136,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, tasks, onAddTask, on
             date={copyModalDate}
             onCopy={(content) => handleCopyTasks(content, copyModalDate)}
             onCancel={() => setCopyModalDate(null)}
+            defaultIncludeDate={defaultIncludeDateInCopy}
           />
         </Modal>
       )}

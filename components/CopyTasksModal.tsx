@@ -11,11 +11,12 @@ interface CopyTasksModalProps {
     date: string;
     onCopy: (content: string) => void;
     onCancel: () => void;
+    defaultIncludeDate: boolean;
 }
 
-const CopyTasksModal: React.FC<CopyTasksModalProps> = ({ tasks, date, onCopy, onCancel }) => {
+const CopyTasksModal: React.FC<CopyTasksModalProps> = ({ tasks, date, onCopy, onCancel, defaultIncludeDate }) => {
     const [selectedFormat, setSelectedFormat] = useState<CopyFormat>('normal');
-    const [includeDate, setIncludeDate] = useState(true);
+    const [includeDate, setIncludeDate] = useState(defaultIncludeDate);
 
     const getFormattedDate = () => {
         const dateObj = new Date(date + 'T00:00:00');
