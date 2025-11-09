@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Project, Task, TaskPriority } from '../types';
-import { PlusIcon, ClipboardIcon, XCircleIcon } from './Icons';
+import { PlusIcon, ClipboardIcon, XCircleIcon, ChevronDownIcon, ChevronRightIcon } from './Icons';
 import TaskItem from './TaskItem';
 import { getTodayDateString, getHumanReadableDate } from '../utils/dateUtils';
 import { DatePicker } from './ui/date-picker';
@@ -34,6 +34,56 @@ interface ProjectViewProps {
 const ProjectView: React.FC<ProjectViewProps> = ({ project, tasks, onAddTask, onUpdateTask, onDeleteTask, onEditTask, setNotification, defaultIncludeDateInCopy }) => {
   const [filterDate, setFilterDate] = useState('');
   const [copyModalDate, setCopyModalDate] = useState<string | null>(null);
+  // Track user's explicit state: collapsed dates (for today) and expanded dates (for other dates)
+  const [collapsedDates, setCollapsedDates] = useState<Set<string>>(new Set());
+  const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
+  
+  const today = getTodayDateString();
+  
+  // Check if a date is collapsed
+  // Default: today's date is expanded, other dates are collapsed
+  // User can toggle any date regardless
+  const isDateCollapsed = (date: string) => {
+    if (date === today) {
+      // For today: default is expanded, so if it's in collapsed set, it's collapsed
+      return collapsedDates.has(date);
+    } else {
+      // For other dates: default is collapsed, so if it's NOT in expanded set, it's collapsed
+      return !expandedDates.has(date);
+    }
+  };
+
+  const toggleDateCollapse = (date: string) => {
+    const currentlyCollapsed = isDateCollapsed(date);
+    
+    if (date === today) {
+      // For today: toggle in collapsed set
+      setCollapsedDates(prev => {
+        const newSet = new Set(prev);
+        if (currentlyCollapsed) {
+          // If currently collapsed, remove from set to expand
+          newSet.delete(date);
+        } else {
+          // If currently expanded, add to set to collapse
+          newSet.add(date);
+        }
+        return newSet;
+      });
+    } else {
+      // For other dates: toggle in expanded set
+      setExpandedDates(prev => {
+        const newSet = new Set(prev);
+        if (currentlyCollapsed) {
+          // If currently collapsed, add to set to expand
+          newSet.add(date);
+        } else {
+          // If currently expanded, remove from set to collapse
+          newSet.delete(date);
+        }
+        return newSet;
+      });
+    }
+  };
   
   const handleToggleComplete = (taskId: string) => {
     const task = tasks.find(t => t.id === taskId);
@@ -108,33 +158,50 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, tasks, onAddTask, on
 
       {filteredTasks.length > 0 ? (
         <div className="space-y-6">
-          {sortedDates.map(date => (
-            <div key={date}>
-              <div className="flex items-center mb-3 border-b border-border pb-2">
-                <h3 className="text-lg font-semibold text-foreground">{getHumanReadableDate(date)}</h3>
-                <button 
-                  onClick={() => handleCopyClick(date)} 
-                  className="ml-4 text-foreground/60 hover:text-primary transition-colors"
-                  aria-label={`Copy tasks for ${getHumanReadableDate(date)}`}
-                >
-                  <ClipboardIcon className="w-5 h-5" />
-                </button>
+          {sortedDates.map(date => {
+            const isCollapsed = isDateCollapsed(date);
+            return (
+              <div key={date}>
+                <div className="flex items-center mb-3 border-b border-border pb-2">
+                  <button
+                    onClick={() => toggleDateCollapse(date)}
+                    className="text-foreground/60 hover:text-primary transition-colors p-1 mr-2"
+                    title={isCollapsed ? "Expand tasks" : "Collapse tasks"}
+                    aria-label={isCollapsed ? "Expand tasks" : "Collapse tasks"}
+                  >
+                    {isCollapsed ? (
+                      <ChevronRightIcon className="w-4 h-4" />
+                    ) : (
+                      <ChevronDownIcon className="w-4 h-4" />
+                    )}
+                  </button>
+                  <h3 className="text-lg font-semibold text-foreground flex-1">{getHumanReadableDate(date)}</h3>
+                  <button 
+                    onClick={() => handleCopyClick(date)} 
+                    className="ml-4 text-foreground/60 hover:text-primary transition-colors"
+                    aria-label={`Copy tasks for ${getHumanReadableDate(date)}`}
+                  >
+                    <ClipboardIcon className="w-5 h-5" />
+                  </button>
+                </div>
+                {!isCollapsed && (
+                  <div className="space-y-2 pl-6">
+                    {groupedTasks[date]
+                      .sort((a, b) => getPriorityOrder(a.priority) - getPriorityOrder(b.priority))
+                      .map(task => (
+                        <TaskItem
+                          key={task.id}
+                          task={task}
+                          onToggleComplete={handleToggleComplete}
+                          onDelete={onDeleteTask}
+                          onEdit={onEditTask}
+                        />
+                      ))}
+                  </div>
+                )}
               </div>
-              <div className="space-y-2">
-                {groupedTasks[date]
-                  .sort((a, b) => getPriorityOrder(a.priority) - getPriorityOrder(b.priority))
-                  .map(task => (
-                    <TaskItem
-                      key={task.id}
-                      task={task}
-                      onToggleComplete={handleToggleComplete}
-                      onDelete={onDeleteTask}
-                      onEdit={onEditTask}
-                    />
-                  ))}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div className="text-center py-10">
