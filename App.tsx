@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import { Project, Task, View, ProjectSortOrder } from './types';
+import { Project, Task, View, ProjectSortOrder, TaskPriority } from './types';
 import Sidebar from './components/Sidebar';
 import ProjectView from './components/ProjectView';
 import DailyView from './components/DailyView';
@@ -12,6 +12,7 @@ import Modal from './components/Modal';
 import BatchTaskModal from './components/BatchTaskModal';
 import ProjectBatchTaskModal from './components/ProjectBatchTaskModal';
 import { DatePicker } from './components/ui/date-picker';
+import { Select } from './components/ui/select';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -77,16 +78,17 @@ const ProjectForm: React.FC<{
 };
 
 const TaskForm: React.FC<{
-  onSubmit: (title: string, date: string) => void;
+  onSubmit: (title: string, date: string, priority: TaskPriority) => void;
   onCancel: () => void;
   task?: Task;
 }> = ({ onSubmit, onCancel, task }) => {
   const [title, setTitle] = useState(task?.title || '');
   const [date, setDate] = useState(task?.date || getTodayDateString());
+  const [priority, setPriority] = useState<TaskPriority>(task?.priority || 'medium');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(title, date);
+    onSubmit(title, date, priority);
   };
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -102,6 +104,22 @@ const TaskForm: React.FC<{
           className="mt-1 block w-full px-3 py-2 bg-card border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-primary focus:border-primary sm:text-sm text-foreground"
           required
           autoFocus
+        />
+      </div>
+      <div>
+        <label htmlFor="taskPriority" className="block text-sm font-medium text-foreground mb-2">
+          Priority
+        </label>
+        <Select
+          value={priority}
+          onChange={(value) => setPriority(value as TaskPriority)}
+          options={[
+            { value: 'high', label: 'High' },
+            { value: 'medium', label: 'Medium' },
+            { value: 'low', label: 'Low' },
+          ]}
+          placeholder="Select priority..."
+          className="w-full"
         />
       </div>
       <div>
@@ -196,7 +214,7 @@ function App() {
     ));
   };
 
-  const handleCreateTask = (title: string, projectId: string, date: string) => {
+  const handleCreateTask = (title: string, projectId: string, date: string, priority: TaskPriority) => {
     if (title && title.trim() !== '') {
       const newTask: Task = {
         id: `task_${Date.now()}`,
@@ -204,19 +222,21 @@ function App() {
         title: title.trim(),
         date: date,
         isCompleted: false,
+        priority: priority,
       };
       setTasks([...tasks, newTask]);
       setModalState(null);
     }
   };
 
-  const handleBatchCreateTasks = (newTasks: Array<{ title: string; projectId: string }>) => {
+  const handleBatchCreateTasks = (newTasks: Array<{ title: string; projectId: string; priority: TaskPriority }>) => {
     const tasksToAdd: Task[] = newTasks.map((t, i) => ({
       id: `task_${Date.now()}_${i}`,
       projectId: t.projectId,
       title: t.title,
       date: getTodayDateString(),
       isCompleted: false,
+      priority: t.priority,
     }));
 
     if (tasksToAdd.length > 0) {
@@ -226,13 +246,14 @@ function App() {
     setModalState(null);
   };
 
-  const handleProjectBatchCreateTasks = (projectId: string, newTasks: Array<{ title: string; date: string }>) => {
+  const handleProjectBatchCreateTasks = (projectId: string, newTasks: Array<{ title: string; date: string; priority: TaskPriority }>) => {
     const tasksToAdd: Task[] = newTasks.map((t, i) => ({
       id: `task_${Date.now()}_${i}`,
       projectId: projectId,
       title: t.title,
       date: t.date,
       isCompleted: false,
+      priority: t.priority,
     }));
 
     if (tasksToAdd.length > 0) {
@@ -363,7 +384,7 @@ function App() {
           <Modal isOpen={true} onClose={() => setModalState(null)} title="Edit Task">
             <TaskForm
               task={modalState.task}
-              onSubmit={(title, date) => handleUpdateTask({ ...modalState.task, title, date })}
+              onSubmit={(title, date, priority) => handleUpdateTask({ ...modalState.task, title, date, priority })}
               onCancel={() => setModalState(null)}
             />
           </Modal>

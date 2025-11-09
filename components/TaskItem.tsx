@@ -12,6 +12,32 @@ interface TaskItemProps {
 }
 
 const TaskItem: React.FC<TaskItemProps> = ({ task, onToggleComplete, onDelete, onEdit }) => {
+  const getPriorityBadgeColor = (priority?: string) => {
+    switch (priority) {
+      case 'high':
+        return 'bg-destructive text-destructive-foreground';
+      case 'medium':
+        return 'bg-yellow-500 text-white';
+      case 'low':
+        return 'bg-muted text-muted-foreground';
+      default:
+        return 'bg-muted text-muted-foreground';
+    }
+  };
+
+  const getPriorityLabel = (priority?: string) => {
+    switch (priority) {
+      case 'high':
+        return 'High';
+      case 'medium':
+        return 'Medium';
+      case 'low':
+        return 'Low';
+      default:
+        return 'Medium';
+    }
+  };
+
   return (
     <div className="flex items-center p-3 bg-card rounded-lg shadow-sm hover:bg-muted transition-colors">
       <Checkbox
@@ -23,6 +49,11 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onToggleComplete, onDelete, o
         {task.title}
       </span>
       <div className="flex items-center space-x-2">
+        {task.priority && (
+          <span className={`${getPriorityBadgeColor(task.priority)} text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap`}>
+            {getPriorityLabel(task.priority)}
+          </span>
+        )}
         <button onClick={() => onEdit(task)} className="text-foreground/60 hover:text-primary transition-colors">
           <PencilIcon />
         </button>

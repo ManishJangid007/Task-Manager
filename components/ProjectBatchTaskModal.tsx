@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { PlusIcon, TrashIcon } from './Icons';
 import { DatePicker } from './ui/date-picker';
+import { Select } from './ui/select';
+import { TaskPriority } from '../types';
 import { getTodayDateString } from '../utils/dateUtils';
 
 interface ProjectBatchTaskModalProps {
   projectId: string;
-  onSubmit: (tasks: Array<{ title: string; date: string }>) => void;
+  onSubmit: (tasks: Array<{ title: string; date: string; priority: TaskPriority }>) => void;
   onCancel: () => void;
 }
 
@@ -13,11 +15,12 @@ type TaskRow = {
   id: number;
   title: string;
   date: string;
+  priority: TaskPriority;
 };
 
 const ProjectBatchTaskModal: React.FC<ProjectBatchTaskModalProps> = ({ projectId, onSubmit, onCancel }) => {
   const [taskRows, setTaskRows] = useState<TaskRow[]>([
-    { id: Date.now(), title: '', date: getTodayDateString() },
+    { id: Date.now(), title: '', date: getTodayDateString(), priority: 'medium' },
   ]);
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -37,8 +40,10 @@ const ProjectBatchTaskModal: React.FC<ProjectBatchTaskModalProps> = ({ projectId
         return;
       }
     }
-    const lastDate = taskRows.length > 0 ? taskRows[taskRows.length - 1].date : getTodayDateString();
-    setTaskRows([...taskRows, { id: Date.now(), title: '', date: lastDate }]);
+    const lastRow = taskRows.length > 0 ? taskRows[taskRows.length - 1] : null;
+    const lastDate = lastRow?.date || getTodayDateString();
+    const lastPriority = lastRow?.priority || 'medium';
+    setTaskRows([...taskRows, { id: Date.now(), title: '', date: lastDate, priority: lastPriority }]);
   };
 
   const handleRemoveRow = (id: number) => {
@@ -49,7 +54,7 @@ const ProjectBatchTaskModal: React.FC<ProjectBatchTaskModalProps> = ({ projectId
     setTaskRows(taskRows.filter(row => row.id !== id));
   };
 
-  const handleRowChange = (id: number, field: 'title' | 'date', value: string) => {
+  const handleRowChange = (id: number, field: 'title' | 'date' | 'priority', value: string) => {
     setTaskRows(
       taskRows.map(row => (row.id === id ? { ...row, [field]: value } : row))
     );
@@ -68,7 +73,9 @@ const ProjectBatchTaskModal: React.FC<ProjectBatchTaskModalProps> = ({ projectId
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const tasksToSubmit = taskRows.filter(row => row.title.trim() !== '' && row.date);
+    const tasksToSubmit = taskRows
+      .filter(row => row.title.trim() !== '' && row.date)
+      .map(row => ({ title: row.title, date: row.date, priority: row.priority }));
     onSubmit(tasksToSubmit);
   };
 
@@ -77,7 +84,7 @@ const ProjectBatchTaskModal: React.FC<ProjectBatchTaskModalProps> = ({ projectId
       <div className="flex-1 overflow-y-auto pr-2 space-y-3 sm:space-y-4 min-h-0">
         {taskRows.map((row, index) => (
           <div key={row.id} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-            <div className="flex-1 sm:flex-none sm:w-1/3">
+            <div className="flex-1 sm:flex-none sm:w-1/4">
               <DatePicker
                 value={row.date}
                 onChange={(value) => handleRowChange(row.id, 'date', value)}
@@ -94,6 +101,19 @@ const ProjectBatchTaskModal: React.FC<ProjectBatchTaskModalProps> = ({ projectId
               onKeyDown={(e) => handleKeyDown(e, index)}
               className="flex-1 px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-sm bg-card border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-foreground"
             />
+            <div className="flex-1 sm:flex-none sm:w-1/4">
+              <Select
+                value={row.priority}
+                onChange={(value) => handleRowChange(row.id, 'priority', value as TaskPriority)}
+                options={[
+                  { value: 'high', label: 'High' },
+                  { value: 'medium', label: 'Medium' },
+                  { value: 'low', label: 'Low' },
+                ]}
+                placeholder="Priority..."
+                className="w-full h-9"
+              />
+            </div>
             <button 
               type="button" 
               onClick={() => handleRemoveRow(row.id)} 

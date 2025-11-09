@@ -1,9 +1,22 @@
 import React, { useState, useMemo } from 'react';
-import { Task, Project } from '../types';
+import { Task, Project, TaskPriority } from '../types';
 import TaskItem from './TaskItem';
 import { getHumanReadableDate, getTodayDateString } from '../utils/dateUtils';
 import { ClipboardIcon, XCircleIcon, ChevronDownIcon, ChevronRightIcon } from './Icons';
 import { DatePicker } from './ui/date-picker';
+
+const getPriorityOrder = (priority?: TaskPriority): number => {
+  switch (priority) {
+    case 'high':
+      return 0;
+    case 'medium':
+      return 1;
+    case 'low':
+      return 2;
+    default:
+      return 1; // Default to medium
+  }
+};
 
 interface DailyViewProps {
   tasks: Task[];
@@ -275,15 +288,17 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, projects, onUpdateTask, on
                     </button>
                     {!isCollapsed && (
                       <div className="space-y-1 pl-4">
-                        {tasksByProject[projectId].map(task => (
-                          <TaskItem
-                            key={task.id}
-                            task={task}
-                            onToggleComplete={handleToggleComplete}
-                            onDelete={onDeleteTask}
-                            onEdit={onEditTask}
-                          />
-                        ))}
+                        {tasksByProject[projectId]
+                          .sort((a, b) => getPriorityOrder(a.priority) - getPriorityOrder(b.priority))
+                          .map(task => (
+                            <TaskItem
+                              key={task.id}
+                              task={task}
+                              onToggleComplete={handleToggleComplete}
+                              onDelete={onDeleteTask}
+                              onEdit={onEditTask}
+                            />
+                          ))}
                       </div>
                     )}
                   </div>

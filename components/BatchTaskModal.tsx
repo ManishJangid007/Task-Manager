@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Project } from '../types';
+import { Project, TaskPriority } from '../types';
 import { PlusIcon, TrashIcon } from './Icons';
 import { Combobox } from './ui/combobox';
+import { Select } from './ui/select';
 
 interface BatchTaskModalProps {
   projects: Project[];
-  onSubmit: (tasks: Array<{ title: string; projectId: string }>) => void;
+  onSubmit: (tasks: Array<{ title: string; projectId: string; priority: TaskPriority }>) => void;
   onCancel: () => void;
 }
 
@@ -13,11 +14,12 @@ type TaskRow = {
   id: number;
   title: string;
   projectId: string;
+  priority: TaskPriority;
 };
 
 const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onCancel }) => {
   const [taskRows, setTaskRows] = useState<TaskRow[]>([
-    { id: Date.now(), title: '', projectId: projects[0]?.id || '' },
+    { id: Date.now(), title: '', projectId: projects[0]?.id || '', priority: 'medium' },
   ]);
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -37,8 +39,10 @@ const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onC
         return;
       }
     }
-    const lastProject = taskRows.length > 0 ? taskRows[taskRows.length - 1].projectId : projects[0]?.id || '';
-    setTaskRows([...taskRows, { id: Date.now(), title: '', projectId: lastProject }]);
+    const lastRow = taskRows.length > 0 ? taskRows[taskRows.length - 1] : null;
+    const lastProject = lastRow?.projectId || projects[0]?.id || '';
+    const lastPriority = lastRow?.priority || 'medium';
+    setTaskRows([...taskRows, { id: Date.now(), title: '', projectId: lastProject, priority: lastPriority }]);
   };
 
   const handleRemoveRow = (id: number) => {
@@ -49,7 +53,7 @@ const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onC
     setTaskRows(taskRows.filter(row => row.id !== id));
   };
 
-  const handleRowChange = (id: number, field: 'title' | 'projectId', value: string) => {
+  const handleRowChange = (id: number, field: 'title' | 'projectId' | 'priority', value: string) => {
     setTaskRows(
       taskRows.map(row => (row.id === id ? { ...row, [field]: value } : row))
     );
@@ -68,7 +72,9 @@ const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onC
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const tasksToSubmit = taskRows.filter(row => row.title.trim() !== '' && row.projectId);
+    const tasksToSubmit = taskRows
+      .filter(row => row.title.trim() !== '' && row.projectId)
+      .map(row => ({ title: row.title, projectId: row.projectId, priority: row.priority }));
     onSubmit(tasksToSubmit);
   };
 
@@ -92,7 +98,7 @@ const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onC
       <div className="flex-1 overflow-y-auto pr-2 space-y-3 sm:space-y-4 min-h-0">
         {taskRows.map((row, index) => (
           <div key={row.id} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-            <div className="flex-1 sm:flex-none sm:w-1/3">
+            <div className="flex-1 sm:flex-none sm:w-1/4">
               <Combobox
                 value={row.projectId}
                 onChange={(value) => handleRowChange(row.id, 'projectId', value)}
@@ -103,7 +109,6 @@ const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onC
               />
             </div>
             <input
-              // FIX: The ref callback should not return a value. Using a block body for the arrow function fixes the type error.
               ref={el => { inputsRef.current[index] = el; }}
               type="text"
               placeholder="Task title..."
@@ -112,6 +117,19 @@ const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onC
               onKeyDown={(e) => handleKeyDown(e, index)}
               className="flex-1 px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-sm bg-card border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-foreground"
             />
+            <div className="flex-1 sm:flex-none sm:w-1/4">
+              <Select
+                value={row.priority}
+                onChange={(value) => handleRowChange(row.id, 'priority', value as TaskPriority)}
+                options={[
+                  { value: 'high', label: 'High' },
+                  { value: 'medium', label: 'Medium' },
+                  { value: 'low', label: 'Low' },
+                ]}
+                placeholder="Priority..."
+                className="w-full h-9"
+              />
+            </div>
             <button 
               type="button" 
               onClick={() => handleRemoveRow(row.id)} 

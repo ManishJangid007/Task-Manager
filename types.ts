@@ -1,10 +1,13 @@
 
+export type TaskPriority = 'high' | 'medium' | 'low';
+
 export interface Task {
   id: string;
   projectId: string;
   title: string;
   date: string; // YYYY-MM-DD
   isCompleted: boolean;
+  priority?: TaskPriority;
 }
 
 export interface Project {

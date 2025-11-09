@@ -1,11 +1,24 @@
 import React, { useMemo, useState } from 'react';
-import { Project, Task } from '../types';
+import { Project, Task, TaskPriority } from '../types';
 import { PlusIcon, ClipboardIcon, XCircleIcon } from './Icons';
 import TaskItem from './TaskItem';
 import { getTodayDateString, getHumanReadableDate } from '../utils/dateUtils';
 import { DatePicker } from './ui/date-picker';
 import Modal from './Modal';
 import CopyTasksModal from './CopyTasksModal';
+
+const getPriorityOrder = (priority?: TaskPriority): number => {
+  switch (priority) {
+    case 'high':
+      return 0;
+    case 'medium':
+      return 1;
+    case 'low':
+      return 2;
+    default:
+      return 1; // Default to medium
+  }
+};
 
 interface ProjectViewProps {
   project: Project;
@@ -108,15 +121,17 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, tasks, onAddTask, on
                 </button>
               </div>
               <div className="space-y-2">
-                {groupedTasks[date].map(task => (
-                  <TaskItem
-                    key={task.id}
-                    task={task}
-                    onToggleComplete={handleToggleComplete}
-                    onDelete={onDeleteTask}
-                    onEdit={onEditTask}
-                  />
-                ))}
+                {groupedTasks[date]
+                  .sort((a, b) => getPriorityOrder(a.priority) - getPriorityOrder(b.priority))
+                  .map(task => (
+                    <TaskItem
+                      key={task.id}
+                      task={task}
+                      onToggleComplete={handleToggleComplete}
+                      onDelete={onDeleteTask}
+                      onEdit={onEditTask}
+                    />
+                  ))}
               </div>
             </div>
           ))}
