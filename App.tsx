@@ -164,6 +164,7 @@ function App() {
   const [modalState, setModalState] = useState<ModalState>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<{ type: 'project' | 'task'; id: string } | null>(null);
+  const [importDialog, setImportDialog] = useState<{ projects: Project[]; tasks: Task[] } | null>(null);
 
   useEffect(() => {
     if (notification) {
@@ -305,12 +306,7 @@ function App() {
           const text = e.target?.result as string;
           const { projects: importedProjects, tasks: importedTasks } = JSON.parse(text);
           if (Array.isArray(importedProjects) && Array.isArray(importedTasks)) {
-            if (window.confirm('This will overwrite your current data. Are you sure?')) {
-              setProjects(importedProjects);
-              setTasks(importedTasks);
-              setNotification('Data imported successfully!');
-              setView('daily');
-            }
+            setImportDialog({ projects: importedProjects, tasks: importedTasks });
           } else {
             throw new Error('Invalid file format');
           }
@@ -321,6 +317,16 @@ function App() {
       reader.readAsText(file);
     }
     event.target.value = '';
+  };
+
+  const confirmImport = () => {
+    if (importDialog) {
+      setProjects(importDialog.projects);
+      setTasks(importDialog.tasks);
+      setNotification('Data imported successfully!');
+      setView('daily');
+      setImportDialog(null);
+    }
   };
 
 
@@ -472,6 +478,27 @@ function App() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Import Confirmation Dialog */}
+      <AlertDialog open={importDialog !== null} onOpenChange={(open) => !open && setImportDialog(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Import Data</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will overwrite your current data. Are you sure you want to continue? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmImport}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              Import
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
