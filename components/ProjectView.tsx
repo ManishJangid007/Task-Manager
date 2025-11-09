@@ -4,6 +4,8 @@ import { PlusIcon, ClipboardIcon, XCircleIcon } from './Icons';
 import TaskItem from './TaskItem';
 import { getTodayDateString, getHumanReadableDate } from '../utils/dateUtils';
 import { DatePicker } from './ui/date-picker';
+import Modal from './Modal';
+import CopyTasksModal from './CopyTasksModal';
 
 interface ProjectViewProps {
   project: Project;
@@ -17,6 +19,7 @@ interface ProjectViewProps {
 
 const ProjectView: React.FC<ProjectViewProps> = ({ project, tasks, onAddTask, onUpdateTask, onDeleteTask, onEditTask, setNotification }) => {
   const [filterDate, setFilterDate] = useState('');
+  const [copyModalDate, setCopyModalDate] = useState<string | null>(null);
   
   const handleToggleComplete = (taskId: string) => {
     const task = tasks.find(t => t.id === taskId);
@@ -25,28 +28,20 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, tasks, onAddTask, on
     }
   };
 
-  const copyDaysTasks = (date: string) => {
+  const handleCopyClick = (date: string) => {
     const dayTasks = groupedTasks[date];
     if (!dayTasks || dayTasks.length === 0) {
         setNotification("No tasks for this day to copy.");
         return;
     }
+    setCopyModalDate(date);
+  };
 
-    const dateObj = new Date(date + 'T00:00:00');
-    const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
-    const dayOfMonth = dateObj.getDate().toString().padStart(2, '0');
-    const year = dateObj.getFullYear();
-    const formattedDate = `${month}-${dayOfMonth}-${year}`;
-    
-    const isToday = date === getTodayDateString();
-    let content = isToday ? `Today's tasks [${formattedDate}]\n` : `Date [${formattedDate}]\n`;
-    
-    dayTasks.forEach(task => {
-        content += `    - ${task.title}\n`;
-    });
-
-    navigator.clipboard.writeText(content.trim());
+  const handleCopyTasks = (content: string, date: string) => {
+    navigator.clipboard.writeText(content);
+    const dayTasks = groupedTasks[date];
     setNotification(`Copied ${dayTasks.length} task(s) for ${getHumanReadableDate(date)}!`);
+    setCopyModalDate(null);
   };
 
   const filteredTasks = useMemo(() => {
@@ -104,7 +99,7 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, tasks, onAddTask, on
               <div className="flex items-center mb-3 border-b border-border pb-2">
                 <h3 className="text-lg font-semibold text-foreground">{getHumanReadableDate(date)}</h3>
                 <button 
-                  onClick={() => copyDaysTasks(date)} 
+                  onClick={() => handleCopyClick(date)} 
                   className="ml-4 text-foreground/60 hover:text-primary transition-colors"
                   aria-label={`Copy tasks for ${getHumanReadableDate(date)}`}
                 >
@@ -131,6 +126,17 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, tasks, onAddTask, on
             {filterDate ? `No tasks found for ${getHumanReadableDate(filterDate)}.` : 'No tasks in this project yet. Add one to get started!'}
           </p>
         </div>
+      )}
+
+      {copyModalDate && (
+        <Modal isOpen={true} onClose={() => setCopyModalDate(null)} title="Copy Tasks">
+          <CopyTasksModal
+            tasks={groupedTasks[copyModalDate] || []}
+            date={copyModalDate}
+            onCopy={(content) => handleCopyTasks(content, copyModalDate)}
+            onCancel={() => setCopyModalDate(null)}
+          />
+        </Modal>
       )}
     </div>
   );
