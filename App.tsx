@@ -369,7 +369,7 @@ function App() {
         );
       case 'batchAddTask':
         return (
-          <Modal isOpen={true} onClose={() => setModalState(null)} title="Quick Add Tasks" size="large">
+          <Modal isOpen={true} onClose={() => setModalState(null)} title="Add Tasks" size="large">
             <BatchTaskModal
               projects={projects}
               onSubmit={handleBatchCreateTasks}

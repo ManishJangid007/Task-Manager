@@ -175,7 +175,7 @@ const Sidebar: React.FC<SidebarProps> = ({ projects, tasks, view, setView, onAdd
             onClick={onQuickAddTask}
             className="w-full flex items-center px-4 py-2 text-sm font-medium rounded-md text-foreground/80 hover:bg-muted transition-colors"
         >
-            <PlusIcon className="mr-3 w-5 h-5"/> Quick Add Tasks
+            <PlusIcon className="mr-3 w-5 h-5"/> Add Tasks
         </button>
       </nav>
 
