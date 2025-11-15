@@ -221,7 +221,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({
           <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-4">Auto Backup</h3>
           <p className="text-muted-foreground mb-6">
             {fileSystemSupported
-              ? 'Press Ctrl+S (or Cmd+S on Mac) to automatically save backup.json to your selected folder. The backup file will be overwritten each time.'
+              ? 'Press Ctrl+S (or Cmd+S on Mac) to automatically save backup.json to the chrono subfolder in your selected folder. The backup file will be overwritten each time.'
               : 'This feature is not supported by your browser. Auto backup requires File System Access API support (available in Chrome, Edge, and Opera).'}
           </p>
 
@@ -258,6 +258,11 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                     )}
                   </div>
                 )}
+              </div>
+              <div className="px-3 py-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
+                <p className="text-xs text-yellow-800 dark:text-yellow-200">
+                  <strong>Note:</strong> To use auto-save functionality (Ctrl+S / Cmd+S), please select a folder other than Downloads. The Downloads folder may trigger file downloads instead of overwriting the backup file.
+                </p>
               </div>
               <p className="text-xs text-muted-foreground">
                 Default: {backupConfig ? getDefaultDownloadsPath(backupConfig.os) : 'Downloads'}

@@ -1,5 +1,38 @@
 // File System Access API utility for PWA backup system
 
+// Type declarations for File System Access API
+interface FileSystemPermissionMode {
+  mode: 'read' | 'readwrite';
+}
+
+interface FileSystemPermissionDescriptor {
+  mode: 'read' | 'readwrite';
+  name?: string;
+}
+
+declare global {
+  interface Window {
+    showDirectoryPicker(options?: { mode?: 'read' | 'readwrite' }): Promise<FileSystemDirectoryHandle>;
+  }
+
+  interface FileSystemDirectoryHandle {
+    queryPermission(descriptor?: FileSystemPermissionDescriptor): Promise<PermissionState>;
+    requestPermission(descriptor?: FileSystemPermissionDescriptor): Promise<PermissionState>;
+    getDirectoryHandle(name: string, options?: { create?: boolean }): Promise<FileSystemDirectoryHandle>;
+    getFileHandle(name: string, options?: { create?: boolean }): Promise<FileSystemFileHandle>;
+  }
+
+  interface FileSystemFileHandle {
+    createWritable(options?: { keepExistingData?: boolean }): Promise<FileSystemWritableFileStream>;
+  }
+
+  interface FileSystemWritableFileStream extends WritableStream {
+    seek(position: number): Promise<void>;
+    truncate(size: number): Promise<void>;
+    write(data: string | Blob | ArrayBuffer | DataView): Promise<void>;
+  }
+}
+
 const DB_NAME = 'chrono-backup-db';
 const DB_VERSION = 1;
 const STORE_NAME = 'directory-handle';
@@ -15,10 +48,10 @@ export interface BackupConfig {
 // Detect operating system
 export function detectOS(): OS {
   if (typeof window === 'undefined') return 'unknown';
-  
+
   const userAgent = window.navigator.userAgent.toLowerCase();
   const platform = window.navigator.platform.toLowerCase();
-  
+
   if (platform.includes('mac') || userAgent.includes('mac')) {
     return 'macos';
   }
@@ -35,13 +68,13 @@ export function detectOS(): OS {
 export function getDefaultDownloadsPath(os: OS): string {
   switch (os) {
     case 'macos':
-      return '~/Downloads';
+      return '~/Downloads/chrono';
     case 'windows':
-      return 'C:\\Users\\User\\Downloads';
+      return 'C:\\Users\\User\\Downloads\\chrono';
     case 'linux':
-      return '~/Downloads';
+      return '~/Downloads/chrono';
     default:
-      return 'Downloads';
+      return 'Downloads/chrono';
   }
 }
 
@@ -54,10 +87,10 @@ export function isFileSystemAccessSupported(): boolean {
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
-    
+
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result);
-    
+
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
@@ -70,12 +103,12 @@ function openDB(): Promise<IDBDatabase> {
 // Save directory handle to IndexedDB
 export async function saveDirectoryHandle(handle: FileSystemDirectoryHandle | null): Promise<void> {
   if (!isFileSystemAccessSupported()) return;
-  
+
   try {
     const db = await openDB();
     const transaction = db.transaction(STORE_NAME, 'readwrite');
     const store = transaction.objectStore(STORE_NAME);
-    
+
     return new Promise((resolve, reject) => {
       if (handle) {
         const request = store.put(handle, 'directory-handle');
@@ -96,13 +129,13 @@ export async function saveDirectoryHandle(handle: FileSystemDirectoryHandle | nu
 // Load directory handle from IndexedDB
 export async function loadDirectoryHandle(): Promise<FileSystemDirectoryHandle | null> {
   if (!isFileSystemAccessSupported()) return null;
-  
+
   try {
     const db = await openDB();
     const transaction = db.transaction(STORE_NAME, 'readonly');
     const store = transaction.objectStore(STORE_NAME);
     const request = store.get('directory-handle');
-    
+
     return new Promise((resolve, reject) => {
       request.onsuccess = () => {
         const handle = request.result;
@@ -119,7 +152,7 @@ export async function loadDirectoryHandle(): Promise<FileSystemDirectoryHandle |
 // Verify directory handle permission
 export async function verifyPermission(
   handle: FileSystemDirectoryHandle,
-  mode: FileSystemPermissionMode = 'readwrite'
+  mode: 'read' | 'readwrite' = 'readwrite'
 ): Promise<boolean> {
   try {
     // Check if we already have permission
@@ -127,13 +160,13 @@ export async function verifyPermission(
     if (permissionStatus === 'granted') {
       return true;
     }
-    
+
     // Request permission if not granted
     if (permissionStatus === 'prompt') {
       const newPermission = await handle.requestPermission({ mode });
       return newPermission === 'granted';
     }
-    
+
     return false;
   } catch (error) {
     console.error('Permission check failed:', error);
@@ -144,7 +177,7 @@ export async function verifyPermission(
 // Get directory name from handle
 export async function getDirectoryName(handle: FileSystemDirectoryHandle | null): Promise<string> {
   if (!handle) return '';
-  
+
   try {
     // Try to get the name from the handle
     if ('name' in handle) {
@@ -162,21 +195,21 @@ export async function selectDirectory(): Promise<FileSystemDirectoryHandle | nul
   if (!isFileSystemAccessSupported()) {
     throw new Error('File System Access API is not supported');
   }
-  
+
   try {
     const handle = await window.showDirectoryPicker({
       mode: 'readwrite',
     });
-    
+
     // Verify permission
     const hasPermission = await verifyPermission(handle);
     if (!hasPermission) {
       throw new Error('Permission denied');
     }
-    
+
     // Save handle to IndexedDB
     await saveDirectoryHandle(handle);
-    
+
     return handle;
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
@@ -184,6 +217,19 @@ export async function selectDirectory(): Promise<FileSystemDirectoryHandle | nul
       return null;
     }
     throw error;
+  }
+}
+
+// Get or create chrono subfolder in the selected directory
+async function getOrCreateChronoFolder(
+  directoryHandle: FileSystemDirectoryHandle
+): Promise<FileSystemDirectoryHandle> {
+  try {
+    // Try to get existing chrono folder
+    return await directoryHandle.getDirectoryHandle('chrono', { create: false });
+  } catch {
+    // Folder doesn't exist, create it
+    return await directoryHandle.getDirectoryHandle('chrono', { create: true });
   }
 }
 
@@ -199,27 +245,30 @@ export async function saveBackupFile(
     if (!hasPermission) {
       throw new Error('Permission denied. Please select the folder again.');
     }
-    
-    // Get or create file handle
+
+    // Get or create chrono subfolder
+    const chronoFolder = await getOrCreateChronoFolder(directoryHandle);
+
+    // Get or create file handle in chrono folder
     let fileHandle: FileSystemFileHandle;
     try {
       // Try to get existing file
-      fileHandle = await directoryHandle.getFileHandle(filename, { create: false });
+      fileHandle = await chronoFolder.getFileHandle(filename, { create: false });
     } catch {
       // File doesn't exist, create it
-      fileHandle = await directoryHandle.getFileHandle(filename, { create: true });
+      fileHandle = await chronoFolder.getFileHandle(filename, { create: true });
     }
-    
+
     // Create writable stream
     const writable = await fileHandle.createWritable();
-    
+
     // Seek to beginning and truncate to ensure we overwrite
     await writable.seek(0);
     await writable.truncate(0);
-    
+
     // Write data (this will overwrite the entire file)
     await writable.write(data);
-    
+
     // Close the file
     await writable.close();
   } catch (error) {
@@ -246,17 +295,18 @@ export async function getBackupConfig(): Promise<BackupConfig> {
   const os = detectOS();
   const defaultPath = getDefaultDownloadsPath(os);
   const directoryHandle = await loadDirectoryHandle();
-  
+
   let path = defaultPath;
   if (directoryHandle) {
     try {
       const name = await getDirectoryName(directoryHandle);
-      path = name || defaultPath;
+      // Append /chrono to the path to show the subfolder
+      path = name ? `${name}/chrono` : defaultPath;
     } catch {
       path = defaultPath;
     }
   }
-  
+
   return {
     directoryHandle,
     path,
