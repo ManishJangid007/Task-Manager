@@ -161,13 +161,13 @@ const KeysView: React.FC<KeysViewProps> = ({
       ) : (
         <TooltipProvider>
           <div className="border border-border rounded-lg p-2 overflow-x-auto">
-            <Table overflow="visible">
+            <Table overflow="visible" className="table-auto">
               <TableHeader>
                 <TableRow>
-                  <TableHead style={{ width: '27%' }} className="min-w-[150px]">Name / Site Url</TableHead>
-                  <TableHead style={{ width: '27%' }} className="min-w-[150px]">Username / Email</TableHead>
-                  <TableHead style={{ width: '27%' }} className="min-w-[150px]">Password / Key</TableHead>
-                  <TableHead style={{ width: '19%' }} className="min-w-[100px] text-right">Actions</TableHead>
+                  <TableHead className="min-w-[150px]">Name / Site Url</TableHead>
+                  <TableHead className="min-w-[150px]">Username / Email</TableHead>
+                  <TableHead className="min-w-[150px]">Password / Key</TableHead>
+                  <TableHead className="min-w-[100px] text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -176,10 +176,11 @@ const KeysView: React.FC<KeysViewProps> = ({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <TableCell
-                          className="cursor-pointer group relative"
+                          className="cursor-pointer group relative break-words whitespace-normal"
+                          style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
                           onClick={() => handleCopy(getDisplayValue(key, 'nameUrl'))}
                         >
-                          <span className="truncate block transition-all duration-300 group-hover:scale-110 group-hover:translate-y-[-2px] group-hover:drop-shadow-md will-change-transform">
+                          <span className="break-words whitespace-normal block transition-all duration-300 group-hover:scale-110 group-hover:translate-y-[-2px] group-hover:drop-shadow-md will-change-transform" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                             {getDisplayValue(key, 'nameUrl') || '-'}
                           </span>
                         </TableCell>
@@ -191,10 +192,11 @@ const KeysView: React.FC<KeysViewProps> = ({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <TableCell
-                          className="cursor-pointer group relative"
+                          className="cursor-pointer group relative break-words whitespace-normal"
+                          style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
                           onClick={() => handleCopy(getDisplayValue(key, 'usernameEmail'))}
                         >
-                          <span className="truncate block transition-all duration-300 group-hover:scale-110 group-hover:translate-y-[-2px] group-hover:drop-shadow-md will-change-transform">
+                          <span className="break-words whitespace-normal block transition-all duration-300 group-hover:scale-110 group-hover:translate-y-[-2px] group-hover:drop-shadow-md will-change-transform" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                             {getDisplayValue(key, 'usernameEmail') || '-'}
                           </span>
                         </TableCell>
@@ -206,7 +208,8 @@ const KeysView: React.FC<KeysViewProps> = ({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <TableCell
-                          className="cursor-pointer font-mono group relative"
+                          className="cursor-pointer font-mono group relative break-words whitespace-normal"
+                          style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
                           onClick={() => {
                             const actualValue = key.passwordKey || '';
                             if (actualValue) {
@@ -214,7 +217,7 @@ const KeysView: React.FC<KeysViewProps> = ({
                             }
                           }}
                         >
-                          <span className="truncate block transition-all duration-300 group-hover:scale-110 group-hover:translate-y-[-2px] group-hover:drop-shadow-md will-change-transform">
+                          <span className="break-words whitespace-normal block transition-all duration-300 group-hover:scale-110 group-hover:translate-y-[-2px] group-hover:drop-shadow-md will-change-transform" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                             <span className="group-hover:hidden">
                               {getDisplayValue(key, 'passwordKey') || '-'}
                             </span>

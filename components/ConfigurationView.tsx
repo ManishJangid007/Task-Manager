@@ -177,12 +177,12 @@ const ConfigurationView: React.FC<ConfigurationViewProps> = ({
       ) : (
         <TooltipProvider>
           <div className="border border-border rounded-lg p-2 overflow-x-auto">
-            <Table overflow="visible">
+            <Table overflow="visible" className="table-auto">
               <TableHeader>
                 <TableRow>
-                  <TableHead style={{ width: '40%' }} className="min-w-[150px]">Key</TableHead>
-                  <TableHead style={{ width: '40%' }} className="min-w-[150px]">Value</TableHead>
-                  <TableHead style={{ width: '20%' }} className="min-w-[100px] text-right">Actions</TableHead>
+                  <TableHead className="min-w-[150px]">Key</TableHead>
+                  <TableHead className="min-w-[150px]">Value</TableHead>
+                  <TableHead className="min-w-[100px] text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -191,10 +191,11 @@ const ConfigurationView: React.FC<ConfigurationViewProps> = ({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <TableCell
-                          className="cursor-pointer group relative"
+                          className="cursor-pointer group relative break-words whitespace-normal"
+                          style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
                           onClick={() => handleCopy(config.key)}
                         >
-                          <span className="truncate block transition-all duration-300 group-hover:scale-110 group-hover:translate-y-[-2px] group-hover:drop-shadow-md will-change-transform">
+                          <span className="break-words whitespace-normal block transition-all duration-300 group-hover:scale-110 group-hover:translate-y-[-2px] group-hover:drop-shadow-md will-change-transform">
                             {config.key}
                           </span>
                         </TableCell>
@@ -206,7 +207,8 @@ const ConfigurationView: React.FC<ConfigurationViewProps> = ({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <TableCell
-                          className="cursor-pointer group relative"
+                          className="cursor-pointer group relative break-words whitespace-normal"
+                          style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
                           onClick={() => handleCopy(config.value)}
                         >
                           {isLink(config.value) ? (
@@ -217,12 +219,13 @@ const ConfigurationView: React.FC<ConfigurationViewProps> = ({
                               onClick={(e) => {
                                 e.stopPropagation();
                               }}
-                              className="text-primary hover:underline truncate block transition-all duration-300 group-hover:scale-110 group-hover:translate-y-[-2px] group-hover:drop-shadow-md will-change-transform"
+                              className="text-primary hover:underline break-words whitespace-normal block transition-all duration-300 group-hover:scale-110 group-hover:translate-y-[-2px] group-hover:drop-shadow-md will-change-transform"
+                              style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
                             >
                               {config.value}
                             </a>
                           ) : (
-                            <span className="truncate block transition-all duration-300 group-hover:scale-110 group-hover:translate-y-[-2px] group-hover:drop-shadow-md will-change-transform">
+                            <span className="break-words whitespace-normal block transition-all duration-300 group-hover:scale-110 group-hover:translate-y-[-2px] group-hover:drop-shadow-md will-change-transform" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                               {config.value}
                             </span>
                           )}
