@@ -22,7 +22,7 @@ const ProjectBatchTaskModal: React.FC<ProjectBatchTaskModalProps> = ({ projectId
   const [taskRows, setTaskRows] = useState<TaskRow[]>([
     { id: Date.now(), title: '', date: getTodayDateString(), priority: 'medium' },
   ]);
-  const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
+  const inputsRef = useRef<(HTMLTextAreaElement | null)[]>([]);
 
   useEffect(() => {
     // Focus the last input when a new row is added
@@ -60,15 +60,23 @@ const ProjectBatchTaskModal: React.FC<ProjectBatchTaskModalProps> = ({ projectId
     );
   };
   
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, rowIndex: number) => {
-    if (e.key === 'Enter') {
-      // Only add a new row if the current row's title is not empty
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>, rowIndex: number) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault(); // Always prevent default to avoid newline
       const currentRow = taskRows[rowIndex];
       if (currentRow.title.trim()) {
-        e.preventDefault();
+        // Only add a new row if the current row's title is not empty
         handleAddRow();
+      } else {
+        // If empty, submit the form
+        const form = e.currentTarget.closest('form');
+        if (form) {
+          const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+          form.dispatchEvent(submitEvent);
+        }
       }
     }
+    // Shift+Enter allows default behavior (new line in textarea)
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -92,14 +100,20 @@ const ProjectBatchTaskModal: React.FC<ProjectBatchTaskModalProps> = ({ projectId
                 className="w-full h-9"
               />
             </div>
-            <input
+            <textarea
               ref={el => { inputsRef.current[index] = el; }}
-              type="text"
               placeholder="Task title..."
               value={row.title}
               onChange={(e) => handleRowChange(row.id, 'title', e.target.value)}
               onKeyDown={(e) => handleKeyDown(e, index)}
-              className="flex-1 px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-sm bg-card border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-foreground"
+              rows={1}
+              className="flex-1 px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-sm bg-card border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-foreground resize-none min-h-[2.5rem] sm:min-h-[2.25rem]"
+              style={{ height: 'auto' }}
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = 'auto';
+                target.style.height = `${target.scrollHeight}px`;
+              }}
             />
             <div className="flex-1 sm:flex-none sm:w-1/4">
               <Select

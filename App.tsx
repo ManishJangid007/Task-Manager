@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { Project, Task, View, ProjectSortOrder, TaskPriority } from './types';
 import Sidebar from './components/Sidebar';
@@ -85,25 +85,50 @@ const TaskForm: React.FC<{
   const [title, setTitle] = useState(task?.title || '');
   const [date, setDate] = useState(task?.date || getTodayDateString());
   const [priority, setPriority] = useState<TaskPriority>(task?.priority || 'medium');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(title, date, priority);
   };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e as any);
+    }
+    // Shift+Enter allows default behavior (new line in textarea)
+  };
+
+  useEffect(() => {
+    // Adjust height when component mounts or title changes
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [title]);
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label htmlFor="taskTitle" className="block text-sm font-medium text-foreground">
           Task Title
         </label>
-        <input
-          type="text"
+        <textarea
+          ref={textareaRef}
           id="taskTitle"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="mt-1 block w-full px-3 py-2 bg-card border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-primary focus:border-primary sm:text-sm text-foreground"
+          onKeyDown={handleKeyDown}
+          rows={1}
+          className="mt-1 block w-full px-3 py-2 bg-card border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-primary focus:border-primary sm:text-sm text-foreground resize-none min-h-[2.5rem]"
           required
           autoFocus
+          onInput={(e) => {
+            const target = e.target as HTMLTextAreaElement;
+            target.style.height = 'auto';
+            target.style.height = `${target.scrollHeight}px`;
+          }}
         />
       </div>
       <div>
