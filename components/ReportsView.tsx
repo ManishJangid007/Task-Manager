@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Project, Task, ReportPeriod } from '../types';
 import { getDateRange } from '../utils/dateUtils';
@@ -12,6 +12,25 @@ interface ReportsViewProps {
 
 const ReportsView: React.FC<ReportsViewProps> = ({ tasks, projects }) => {
   const [period, setPeriod] = useState<ReportPeriod>('week');
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    // Check if dark mode is active
+    const checkDarkMode = () => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    };
+    
+    checkDarkMode();
+    
+    // Watch for theme changes
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    
+    return () => observer.disconnect();
+  }, []);
 
   const reportData = useMemo(() => {
     const { start, end } = getDateRange(period);
@@ -58,9 +77,16 @@ const ReportsView: React.FC<ReportsViewProps> = ({ tasks, projects }) => {
               <YAxis allowDecimals={false} stroke="#6b7280" />
               <Tooltip
                 contentStyle={{
-                    backgroundColor: 'rgba(31, 41, 55, 0.8)',
-                    borderColor: 'rgba(128, 128, 128, 0.5)',
-                    color: '#ffffff',
+                    backgroundColor: isDarkMode 
+                      ? 'rgba(31, 41, 55, 0.95)' 
+                      : 'rgba(255, 255, 255, 0.98)',
+                    borderColor: isDarkMode 
+                      ? 'rgba(128, 128, 128, 0.5)' 
+                      : 'rgba(128, 128, 128, 0.3)',
+                    color: isDarkMode 
+                      ? '#ffffff' 
+                      : '#1f2937',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
                 }}
               />
               <Legend />
