@@ -22,13 +22,13 @@ interface ComboboxProps {
   className?: string;
 }
 
-export function Combobox({ 
-  value, 
-  onChange, 
-  options, 
-  placeholder = "Select...", 
+export function Combobox({
+  value,
+  onChange,
+  options,
+  placeholder = "Select...",
   searchPlaceholder = "Search...",
-  className 
+  className
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -68,12 +68,12 @@ export function Combobox({
           role="combobox"
           aria-expanded={open}
           className={cn(
-            "justify-between text-left font-normal w-full",
+            "justify-between text-left font-normal w-full min-w-0",
             !selectedOption && "text-muted-foreground",
             className
           )}
         >
-          <span className="truncate">
+          <span className="truncate flex-1 min-w-0">
             {selectedOption ? selectedOption.label : placeholder}
           </span>
           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -111,13 +111,13 @@ export function Combobox({
                   type="button"
                   onClick={() => handleSelect(option.value)}
                   className={cn(
-                    "w-full text-left px-2 py-1.5 text-sm rounded-sm transition-colors hover:bg-accent hover:text-accent-foreground flex items-center justify-between",
+                    "w-full text-left px-2 py-1.5 text-sm rounded-sm transition-colors hover:bg-accent hover:text-accent-foreground flex items-center justify-between min-w-0",
                     value === option.value && "bg-accent text-accent-foreground"
                   )}
                 >
-                  <span>{option.label}</span>
+                  <span className="truncate flex-1 min-w-0">{option.label}</span>
                   {value === option.value && (
-                    <Check className="h-4 w-4" />
+                    <Check className="h-4 w-4 shrink-0 ml-2" />
                   )}
                 </button>
               ))}

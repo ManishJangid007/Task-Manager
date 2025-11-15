@@ -36,7 +36,9 @@ export function Select({ value, onChange, options, placeholder = "Select...", cl
             className
           )}
         >
-          <span>{selectedOption ? selectedOption.label : placeholder}</span>
+          <span className="truncate flex-1 min-w-0">
+            {selectedOption ? selectedOption.label : placeholder}
+          </span>
           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -50,11 +52,11 @@ export function Select({ value, onChange, options, placeholder = "Select...", cl
                 setOpen(false);
               }}
               className={cn(
-                "w-full text-left px-2 py-1.5 text-sm rounded-sm transition-colors hover:bg-accent hover:text-accent-foreground",
+                "w-full text-left px-2 py-1.5 text-sm rounded-sm transition-colors hover:bg-accent hover:text-accent-foreground min-w-0",
                 value === option.value && "bg-accent text-accent-foreground"
               )}
             >
-              {option.label}
+              <span className="truncate block">{option.label}</span>
             </button>
           ))}
         </div>
