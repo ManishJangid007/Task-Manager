@@ -16,8 +16,8 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 
   const paddingClass = size === 'large' ? 'p-4 sm:p-6' : 'p-4';
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-start sm:items-center p-0 sm:p-4 overflow-y-auto">
-      <div className={`bg-card border border-border rounded-none sm:rounded-lg shadow-xl w-full ${maxWidthClass} min-h-full sm:min-h-0 sm:my-4 sm:my-8 sm:max-h-[90vh] flex flex-col`}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-start sm:items-center p-3 sm:p-4 overflow-y-auto">
+      <div className={`bg-card border border-border rounded-lg shadow-xl w-full ${maxWidthClass} min-h-0 sm:min-h-0 my-auto sm:my-4 sm:my-8 max-h-[calc(100vh-1.5rem)] sm:max-h-[90vh] flex flex-col`}>
         <div className={`${paddingClass} border-b border-border flex items-center justify-between flex-shrink-0`}>
           <h3 className="text-lg sm:text-xl font-semibold text-foreground">{title}</h3>
           <button
