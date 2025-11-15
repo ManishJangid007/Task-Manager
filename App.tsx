@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import { Project, Task, View, ProjectSortOrder, TaskPriority, Configuration } from './types';
+import { Project, Task, View, ProjectSortOrder, TaskPriority, Configuration, Key } from './types';
 import Sidebar from './components/Sidebar';
 import ProjectView from './components/ProjectView';
 import DailyView from './components/DailyView';
 import ReportsView from './components/ReportsView';
 import SettingsView from './components/SettingsView';
 import ConfigurationView from './components/ConfigurationView';
+import KeysView from './components/KeysView';
 import { getTodayDateString } from './utils/dateUtils';
 import { CheckCircleIcon, BarsIcon, PriorityHighIcon, PriorityMediumIcon, PriorityLowIcon } from './components/Icons';
 import Modal from './components/Modal';
@@ -202,6 +203,7 @@ function App() {
   const [projects, setProjects] = useLocalStorage<Project[]>('projects', []);
   const [tasks, setTasks] = useLocalStorage<Task[]>('tasks', []);
   const [configurations, setConfigurations] = useLocalStorage<Configuration[]>('configurations', []);
+  const [keys, setKeys] = useLocalStorage<Key[]>('keys', []);
   const [includeCompletedTasks, setIncludeCompletedTasks] = useLocalStorage<boolean>('includeCompletedTasks', true);
   const [projectSortOrder, setProjectSortOrder] = useLocalStorage<ProjectSortOrder>('projectSortOrder', 'alphabetical');
   const [askForTaskDeleteConfirmation, setAskForTaskDeleteConfirmation] = useLocalStorage<boolean>('askForTaskDeleteConfirmation', true);
@@ -211,7 +213,7 @@ function App() {
   const [modalState, setModalState] = useState<ModalState>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<{ type: 'project' | 'task'; id: string } | null>(null);
-  const [importDialog, setImportDialog] = useState<{ projects: Project[]; tasks: Task[]; configurations?: Configuration[] } | null>(null);
+  const [importDialog, setImportDialog] = useState<{ projects: Project[]; tasks: Task[]; configurations?: Configuration[]; keys?: Key[] } | null>(null);
 
   useEffect(() => {
     if (notification) {
@@ -335,7 +337,7 @@ function App() {
   };
 
   const handleExport = () => {
-    const data = JSON.stringify({ projects, tasks, configurations }, null, 2);
+    const data = JSON.stringify({ projects, tasks, configurations, keys }, null, 2);
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -354,12 +356,13 @@ function App() {
         try {
           const text = e.target?.result as string;
           const parsed = JSON.parse(text);
-          const { projects: importedProjects, tasks: importedTasks, configurations: importedConfigurations } = parsed;
+          const { projects: importedProjects, tasks: importedTasks, configurations: importedConfigurations, keys: importedKeys } = parsed;
           if (Array.isArray(importedProjects) && Array.isArray(importedTasks)) {
             setImportDialog({ 
               projects: importedProjects, 
               tasks: importedTasks,
-              configurations: Array.isArray(importedConfigurations) ? importedConfigurations : []
+              configurations: Array.isArray(importedConfigurations) ? importedConfigurations : [],
+              keys: Array.isArray(importedKeys) ? importedKeys : []
             });
           } else {
             throw new Error('Invalid file format');
@@ -379,6 +382,9 @@ function App() {
       setTasks(importDialog.tasks);
       if (importDialog.configurations) {
         setConfigurations(importDialog.configurations);
+      }
+      if (importDialog.keys) {
+        setKeys(importDialog.keys);
       }
       setNotification('Data imported successfully!');
       setView('daily');
@@ -408,6 +414,24 @@ function App() {
     setConfigurations(configurations.filter(config => config.id !== configId));
   };
 
+  const handleAddKey = (key: Omit<Key, 'id'>) => {
+    const newKey: Key = {
+      id: `key_${Date.now()}`,
+      ...key,
+    };
+    setKeys([...keys, newKey]);
+  };
+
+  const handleUpdateKey = (updatedKey: Key) => {
+    setKeys(keys.map(key => 
+      key.id === updatedKey.id ? updatedKey : key
+    ));
+  };
+
+  const handleDeleteKey = (keyId: string) => {
+    setKeys(keys.filter(key => key.id !== keyId));
+  };
+
 
   const renderView = () => {
     if (view === 'daily') {
@@ -415,6 +439,9 @@ function App() {
     }
     if (view === 'reports') {
       return <ReportsView tasks={tasks} projects={projects} />;
+    }
+    if (view === 'keys') {
+      return <KeysView keys={keys} onAddKey={handleAddKey} onUpdateKey={handleUpdateKey} onDeleteKey={handleDeleteKey} setNotification={setNotification} />;
     }
     if (view === 'settings') {
       return <SettingsView onExport={handleExport} onImport={handleImport} includeCompletedTasks={includeCompletedTasks} onIncludeCompletedTasksChange={setIncludeCompletedTasks} projectSortOrder={projectSortOrder} onProjectSortOrderChange={setProjectSortOrder} askForTaskDeleteConfirmation={askForTaskDeleteConfirmation} onAskForTaskDeleteConfirmationChange={setAskForTaskDeleteConfirmation} defaultIncludeDateInCopy={defaultIncludeDateInCopy} onDefaultIncludeDateInCopyChange={setDefaultIncludeDateInCopy} />;

@@ -16,7 +16,7 @@ export interface Project {
   pinned?: boolean;
 }
 
-export type View = 'daily' | 'reports' | 'settings' | { type: 'project'; id: string } | { type: 'configuration'; projectId: string };
+export type View = 'daily' | 'reports' | 'keys' | 'settings' | { type: 'project'; id: string } | { type: 'configuration'; projectId: string };
 
 export type ReportPeriod = 'day' | 'week' | 'month' | 'year';
 
@@ -27,4 +27,11 @@ export interface Configuration {
   projectId: string;
   key: string;
   value: string;
+}
+
+export interface Key {
+  id: string;
+  nameUrl?: string;
+  usernameEmail?: string;
+  passwordKey?: string;
 }

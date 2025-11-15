@@ -1,7 +1,7 @@
 
 import React, { useRef, useMemo, useState } from 'react';
 import { Project, Task, View, ProjectSortOrder } from '../types';
-import { PlusIcon, CalendarDaysIcon, ChartBarIcon, FolderIcon, PencilIcon, TrashIcon, XMarkIcon, CogIcon, MagnifyingGlassIcon, PinIcon, EllipsisVerticalIcon } from './Icons';
+import { PlusIcon, CalendarDaysIcon, ChartBarIcon, FolderIcon, PencilIcon, TrashIcon, XMarkIcon, CogIcon, MagnifyingGlassIcon, PinIcon, EllipsisVerticalIcon, KeyIcon } from './Icons';
 import { ThemeToggle } from './ui/theme-toggle';
 import { Badge } from './ui/badge';
 import { getTodayDateString } from '../utils/dateUtils';
@@ -279,7 +279,13 @@ const Sidebar: React.FC<SidebarProps> = ({ projects, tasks, view, setView, onAdd
           </ul>
         </div>
 
-        <div className="border-t border-border pt-4">
+        <div className="border-t border-border pt-4 space-y-2">
+          <button
+            onClick={() => setView('keys')}
+            className={`w-full flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${view === 'keys' ? 'bg-primary text-primary-foreground' : 'text-foreground/80 hover:bg-muted'}`}
+          >
+            <KeyIcon className="mr-3 w-5 h-5" /> Keys
+          </button>
           <button
             onClick={() => setView('settings')}
             className={`w-full flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${view === 'settings' ? 'bg-primary text-primary-foreground' : 'text-foreground/80 hover:bg-muted'}`}
