@@ -7,7 +7,7 @@ import DailyView from './components/DailyView';
 import ReportsView from './components/ReportsView';
 import SettingsView from './components/SettingsView';
 import { getTodayDateString } from './utils/dateUtils';
-import { CheckCircleIcon, BarsIcon } from './components/Icons';
+import { CheckCircleIcon, BarsIcon, PriorityHighIcon, PriorityMediumIcon, PriorityLowIcon } from './components/Icons';
 import Modal from './components/Modal';
 import BatchTaskModal from './components/BatchTaskModal';
 import ProjectBatchTaskModal from './components/ProjectBatchTaskModal';
@@ -87,6 +87,27 @@ const TaskForm: React.FC<{
   const [priority, setPriority] = useState<TaskPriority>(task?.priority || 'medium');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const isEditMode = !!task;
+
+  const getPriorityIcon = (priority: TaskPriority) => {
+    switch (priority) {
+      case 'high':
+        return <PriorityHighIcon className="w-4 h-4" />;
+      case 'medium':
+        return <PriorityMediumIcon className="w-4 h-4" />;
+      case 'low':
+        return <PriorityLowIcon className="w-4 h-4" />;
+      default:
+        return <PriorityMediumIcon className="w-4 h-4" />;
+    }
+  };
+
+  const priorityOptions = [
+    { value: 'high', label: 'High', icon: getPriorityIcon('high') },
+    { value: 'medium', label: 'Medium', icon: getPriorityIcon('medium') },
+    { value: 'low', label: 'Low', icon: getPriorityIcon('low') },
+  ];
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(title, date, priority);
@@ -138,13 +159,12 @@ const TaskForm: React.FC<{
         <Select
           value={priority}
           onChange={(value) => setPriority(value as TaskPriority)}
-          options={[
-            { value: 'high', label: 'High' },
-            { value: 'medium', label: 'Medium' },
-            { value: 'low', label: 'Low' },
-          ]}
+          options={priorityOptions}
           placeholder="Select priority..."
           className="w-full"
+          showIconInField={true}
+          showIconInDropdown={true}
+          iconOnlyInField={!isEditMode}
         />
       </div>
       <div>

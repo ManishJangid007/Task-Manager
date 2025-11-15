@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Task } from '../types';
-import { PencilIcon, TrashIcon } from './Icons';
+import { PencilIcon, TrashIcon, PriorityHighIcon, PriorityMediumIcon, PriorityLowIcon } from './Icons';
 import { Checkbox } from './ui/checkbox';
 
 interface TaskItemProps {
@@ -12,29 +12,29 @@ interface TaskItemProps {
 }
 
 const TaskItem: React.FC<TaskItemProps> = ({ task, onToggleComplete, onDelete, onEdit }) => {
-  const getPriorityBadgeColor = (priority?: string) => {
+  const getPriorityIcon = (priority?: string) => {
     switch (priority) {
       case 'high':
-        return 'bg-destructive text-destructive-foreground';
+        return <PriorityHighIcon className="w-4 h-4" />;
       case 'medium':
-        return 'bg-yellow-500 text-white';
+        return <PriorityMediumIcon className="w-4 h-4" />;
       case 'low':
-        return 'bg-muted text-muted-foreground';
+        return <PriorityLowIcon className="w-4 h-4" />;
       default:
-        return 'bg-yellow-500 text-white'; // Default to medium priority color
+        return <PriorityMediumIcon className="w-4 h-4" />;
     }
   };
 
-  const getPriorityLabel = (priority?: string) => {
+  const getPriorityColor = (priority?: string) => {
     switch (priority) {
       case 'high':
-        return 'High';
+        return 'text-destructive';
       case 'medium':
-        return 'Medium';
+        return 'text-yellow-500';
       case 'low':
-        return 'Low';
+        return 'text-muted-foreground';
       default:
-        return 'Medium';
+        return 'text-yellow-500';
     }
   };
 
@@ -49,8 +49,8 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onToggleComplete, onDelete, o
         {task.title}
       </span>
       <div className="flex items-center space-x-2">
-        <span className={`${getPriorityBadgeColor(task.priority)} text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap`}>
-          {getPriorityLabel(task.priority)}
+        <span className={getPriorityColor(task.priority)}>
+          {getPriorityIcon(task.priority)}
         </span>
         <button onClick={() => onEdit(task)} className="text-foreground/60 hover:text-primary transition-colors">
           <PencilIcon />
