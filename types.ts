@@ -16,8 +16,15 @@ export interface Project {
   pinned?: boolean;
 }
 
-export type View = 'daily' | 'reports' | 'settings' | { type: 'project'; id: string };
+export type View = 'daily' | 'reports' | 'settings' | { type: 'project'; id: string } | { type: 'configuration'; projectId: string };
 
 export type ReportPeriod = 'day' | 'week' | 'month' | 'year';
 
 export type ProjectSortOrder = 'alphabetical' | 'taskCount' | 'recentActivity';
+
+export interface Configuration {
+  id: string;
+  projectId: string;
+  key: string;
+  value: string;
+}

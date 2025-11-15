@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import { Project, Task, View, ProjectSortOrder, TaskPriority } from './types';
+import { Project, Task, View, ProjectSortOrder, TaskPriority, Configuration } from './types';
 import Sidebar from './components/Sidebar';
 import ProjectView from './components/ProjectView';
 import DailyView from './components/DailyView';
 import ReportsView from './components/ReportsView';
 import SettingsView from './components/SettingsView';
+import ConfigurationView from './components/ConfigurationView';
 import { getTodayDateString } from './utils/dateUtils';
 import { CheckCircleIcon, BarsIcon, PriorityHighIcon, PriorityMediumIcon, PriorityLowIcon } from './components/Icons';
 import Modal from './components/Modal';
@@ -200,6 +201,7 @@ const TaskForm: React.FC<{
 function App() {
   const [projects, setProjects] = useLocalStorage<Project[]>('projects', []);
   const [tasks, setTasks] = useLocalStorage<Task[]>('tasks', []);
+  const [configurations, setConfigurations] = useLocalStorage<Configuration[]>('configurations', []);
   const [includeCompletedTasks, setIncludeCompletedTasks] = useLocalStorage<boolean>('includeCompletedTasks', true);
   const [projectSortOrder, setProjectSortOrder] = useLocalStorage<ProjectSortOrder>('projectSortOrder', 'alphabetical');
   const [askForTaskDeleteConfirmation, setAskForTaskDeleteConfirmation] = useLocalStorage<boolean>('askForTaskDeleteConfirmation', true);
@@ -209,7 +211,7 @@ function App() {
   const [modalState, setModalState] = useState<ModalState>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<{ type: 'project' | 'task'; id: string } | null>(null);
-  const [importDialog, setImportDialog] = useState<{ projects: Project[]; tasks: Task[] } | null>(null);
+  const [importDialog, setImportDialog] = useState<{ projects: Project[]; tasks: Task[]; configurations?: Configuration[] } | null>(null);
 
   useEffect(() => {
     if (notification) {
@@ -247,8 +249,9 @@ function App() {
   const confirmDeleteProject = (projectId: string) => {
     setProjects(projects.filter(p => p.id !== projectId));
     setTasks(tasks.filter(t => t.projectId !== projectId));
+    setConfigurations(configurations.filter(c => c.projectId !== projectId));
 
-    if (typeof view === 'object' && view.type === 'project' && view.id === projectId) {
+    if (typeof view === 'object' && (view.type === 'project' && view.id === projectId || view.type === 'configuration' && view.projectId === projectId)) {
       setView('daily');
     }
     setNotification('Project deleted successfully.');
@@ -332,7 +335,7 @@ function App() {
   };
 
   const handleExport = () => {
-    const data = JSON.stringify({ projects, tasks }, null, 2);
+    const data = JSON.stringify({ projects, tasks, configurations }, null, 2);
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -350,9 +353,14 @@ function App() {
       reader.onload = (e) => {
         try {
           const text = e.target?.result as string;
-          const { projects: importedProjects, tasks: importedTasks } = JSON.parse(text);
+          const parsed = JSON.parse(text);
+          const { projects: importedProjects, tasks: importedTasks, configurations: importedConfigurations } = parsed;
           if (Array.isArray(importedProjects) && Array.isArray(importedTasks)) {
-            setImportDialog({ projects: importedProjects, tasks: importedTasks });
+            setImportDialog({ 
+              projects: importedProjects, 
+              tasks: importedTasks,
+              configurations: Array.isArray(importedConfigurations) ? importedConfigurations : []
+            });
           } else {
             throw new Error('Invalid file format');
           }
@@ -369,10 +377,35 @@ function App() {
     if (importDialog) {
       setProjects(importDialog.projects);
       setTasks(importDialog.tasks);
+      if (importDialog.configurations) {
+        setConfigurations(importDialog.configurations);
+      }
       setNotification('Data imported successfully!');
       setView('daily');
       setImportDialog(null);
     }
+  };
+
+  const handleOpenConfiguration = (projectId: string) => {
+    setView({ type: 'configuration', projectId });
+  };
+
+  const handleAddConfiguration = (config: Omit<Configuration, 'id'>) => {
+    const newConfig: Configuration = {
+      id: `config_${Date.now()}`,
+      ...config,
+    };
+    setConfigurations([...configurations, newConfig]);
+  };
+
+  const handleUpdateConfiguration = (updatedConfig: Configuration) => {
+    setConfigurations(configurations.map(config => 
+      config.id === updatedConfig.id ? updatedConfig : config
+    ));
+  };
+
+  const handleDeleteConfiguration = (configId: string) => {
+    setConfigurations(configurations.filter(config => config.id !== configId));
   };
 
 
@@ -393,7 +426,26 @@ function App() {
         return null;
       }
       const projectTasks = tasks.filter(t => t.projectId === project.id);
-      return <ProjectView project={project} tasks={projectTasks} onAddTask={handleAddTaskClick} onUpdateTask={handleUpdateTask} onDeleteTask={handleDeleteTask} onEditTask={handleEditTaskClick} setNotification={setNotification} defaultIncludeDateInCopy={defaultIncludeDateInCopy} />;
+      return <ProjectView project={project} tasks={projectTasks} onAddTask={handleAddTaskClick} onUpdateTask={handleUpdateTask} onDeleteTask={handleDeleteTask} onEditTask={handleEditTaskClick} setNotification={setNotification} defaultIncludeDateInCopy={defaultIncludeDateInCopy} onOpenConfiguration={handleOpenConfiguration} />;
+    }
+    if (typeof view === 'object' && view.type === 'configuration') {
+      const project = projects.find(p => p.id === view.projectId);
+      if (!project) {
+        setView('daily');
+        return null;
+      }
+      const projectConfigurations = configurations.filter(c => c.projectId === project.id);
+      return (
+        <ConfigurationView
+          project={project}
+          configurations={projectConfigurations}
+          onAddConfiguration={handleAddConfiguration}
+          onUpdateConfiguration={handleUpdateConfiguration}
+          onDeleteConfiguration={handleDeleteConfiguration}
+          onBack={() => setView({ type: 'project', id: project.id })}
+          setNotification={setNotification}
+        />
+      );
     }
     return null;
   };

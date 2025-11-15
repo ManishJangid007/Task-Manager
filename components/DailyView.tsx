@@ -196,20 +196,20 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, projects, onUpdateTask, on
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold text-foreground">All Tasks</h2>
-        <div className="flex items-center gap-2">
-          <div className="w-auto">
+    <div className="p-4 sm:p-6 space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h2 className="text-2xl sm:text-3xl font-bold text-foreground">All Tasks</h2>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex-1 sm:flex-initial sm:w-auto">
             <DatePicker
               value={filterDate}
               onChange={setFilterDate}
               placeholder="Select a date"
-              className="w-[200px]"
+              className="w-full sm:w-[200px] h-9"
             />
           </div>
           {filterDate && (
-            <button onClick={() => setFilterDate('')} className="p-1.5 text-foreground/60 hover:text-destructive transition-colors rounded-md hover:bg-muted" aria-label="Clear date filter">
+            <button onClick={() => setFilterDate('')} className="h-9 w-9 p-1.5 text-foreground/60 hover:text-destructive transition-colors rounded-md hover:bg-muted flex items-center justify-center flex-shrink-0" aria-label="Clear date filter">
               <XCircleIcon className="w-4 h-4" />
             </button>
           )}

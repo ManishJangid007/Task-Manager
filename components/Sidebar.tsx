@@ -31,7 +31,7 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ projects, tasks, view, setView, onAddProject, onCreateProject, onEditProject, onDeleteProject, onTogglePin, onQuickAddTask, includeCompletedTasks, projectSortOrder, isOpen, onClose }) => {
-  const activeProject = typeof view === 'object' && view.type === 'project' ? view.id : null;
+  const activeProject = typeof view === 'object' && (view.type === 'project' ? view.id : view.type === 'configuration' ? view.projectId : null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const today = getTodayDateString();
