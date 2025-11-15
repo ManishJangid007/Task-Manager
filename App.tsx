@@ -359,7 +359,7 @@ function App() {
     switch (modalState.type) {
       case 'addProject':
         return (
-          <Modal isOpen={true} onClose={() => setModalState(null)} title="Add New Project">
+          <Modal isOpen={true} onClose={() => setModalState(null)} title="Add New Project" size="large">
             <ProjectForm
               onSubmit={handleCreateProject}
               onCancel={() => setModalState(null)}
@@ -368,7 +368,7 @@ function App() {
         );
       case 'editProject':
         return (
-          <Modal isOpen={true} onClose={() => setModalState(null)} title="Edit Project">
+          <Modal isOpen={true} onClose={() => setModalState(null)} title="Edit Project" size="large">
             <ProjectForm
               project={modalState.project}
               onSubmit={(name) => handleUpdateProject(modalState.project.id, name)}
@@ -388,7 +388,7 @@ function App() {
         );
       case 'editTask':
         return (
-          <Modal isOpen={true} onClose={() => setModalState(null)} title="Edit Task">
+          <Modal isOpen={true} onClose={() => setModalState(null)} title="Edit Task" size="large">
             <TaskForm
               task={modalState.task}
               onSubmit={(title, date, priority) => handleUpdateTask({ ...modalState.task, title, date, priority })}
