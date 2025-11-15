@@ -8,6 +8,14 @@ import ReportsView from './components/ReportsView';
 import SettingsView from './components/SettingsView';
 import ConfigurationView from './components/ConfigurationView';
 import KeysView from './components/KeysView';
+import { 
+  saveBackupFile, 
+  downloadBackupFile, 
+  isFileSystemAccessSupported,
+  getBackupConfig,
+  verifyPermission,
+  type BackupConfig 
+} from './utils/fileSystemAccess';
 import { getTodayDateString } from './utils/dateUtils';
 import { CheckCircleIcon, BarsIcon, PriorityHighIcon, PriorityMediumIcon, PriorityLowIcon } from './components/Icons';
 import Modal from './components/Modal';
@@ -214,6 +222,20 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<{ type: 'project' | 'task'; id: string } | null>(null);
   const [importDialog, setImportDialog] = useState<{ projects: Project[]; tasks: Task[]; configurations?: Configuration[]; keys?: Key[] } | null>(null);
+  const [backupConfig, setBackupConfig] = useState<BackupConfig | null>(null);
+
+  // Load backup config on app start
+  useEffect(() => {
+    const loadBackupConfig = async () => {
+      try {
+        const config = await getBackupConfig();
+        setBackupConfig(config);
+      } catch (error) {
+        console.error('Failed to load backup config:', error);
+      }
+    };
+    loadBackupConfig();
+  }, []);
 
   useEffect(() => {
     if (notification) {
@@ -432,6 +454,86 @@ function App() {
     setKeys(keys.filter(key => key.id !== keyId));
   };
 
+  const handleBackupConfigChange = (config: BackupConfig) => {
+    setBackupConfig(config);
+  };
+
+  // Keyboard shortcut handler for Ctrl+S / Cmd+S
+  useEffect(() => {
+    const handleAutoBackup = async () => {
+      try {
+        const data = JSON.stringify({ projects, tasks, configurations, keys }, null, 2);
+        
+        // Check if File System Access API is supported
+        if (!isFileSystemAccessSupported()) {
+          // Fallback to download
+          downloadBackupFile(data, 'backup.json');
+          setNotification('Backup downloaded (File System Access API not supported)');
+          return;
+        }
+        
+        // Get current backup config (in case it was updated)
+        let currentConfig = backupConfig;
+        if (!currentConfig) {
+          currentConfig = await getBackupConfig();
+          setBackupConfig(currentConfig);
+        }
+        
+        if (currentConfig?.directoryHandle) {
+          // Use File System Access API
+          try {
+            await saveBackupFile(currentConfig.directoryHandle, data, 'backup.json');
+            setNotification('Backup saved successfully!');
+            return;
+          } catch (error: any) {
+            console.error('Failed to save backup:', error);
+            
+            // If permission error, try to reload config and request permission again
+            if (error.message?.includes('Permission') || error.message?.includes('denied')) {
+              const reloadedConfig = await getBackupConfig();
+              if (reloadedConfig?.directoryHandle) {
+                try {
+                  // Try to verify and request permission again
+                  const hasPermission = await verifyPermission(reloadedConfig.directoryHandle);
+                  if (hasPermission) {
+                    await saveBackupFile(reloadedConfig.directoryHandle, data, 'backup.json');
+                    setBackupConfig(reloadedConfig);
+                    setNotification('Backup saved successfully!');
+                    return;
+                  }
+                } catch (retryError) {
+                  console.error('Retry failed:', retryError);
+                }
+              }
+            }
+            
+            // Fallback to download if permission is lost
+            downloadBackupFile(data, 'backup.json');
+            setNotification('Backup downloaded (folder access lost, please reselect folder in Settings)');
+            return;
+          }
+        }
+        
+        // No folder selected, fallback to download
+        downloadBackupFile(data, 'backup.json');
+        setNotification('Backup downloaded (select a folder in Settings to enable auto-save)');
+      } catch (error) {
+        console.error('Backup failed:', error);
+        setNotification('Failed to create backup');
+      }
+    };
+
+    const handleKeyDown = async (e: KeyboardEvent) => {
+      // Check for Ctrl+S (Windows/Linux) or Cmd+S (Mac)
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        await handleAutoBackup();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [projects, tasks, configurations, keys, backupConfig]);
 
   const renderView = () => {
     if (view === 'daily') {
@@ -444,7 +546,7 @@ function App() {
       return <KeysView keys={keys} onAddKey={handleAddKey} onUpdateKey={handleUpdateKey} onDeleteKey={handleDeleteKey} setNotification={setNotification} />;
     }
     if (view === 'settings') {
-      return <SettingsView onExport={handleExport} onImport={handleImport} includeCompletedTasks={includeCompletedTasks} onIncludeCompletedTasksChange={setIncludeCompletedTasks} projectSortOrder={projectSortOrder} onProjectSortOrderChange={setProjectSortOrder} askForTaskDeleteConfirmation={askForTaskDeleteConfirmation} onAskForTaskDeleteConfirmationChange={setAskForTaskDeleteConfirmation} defaultIncludeDateInCopy={defaultIncludeDateInCopy} onDefaultIncludeDateInCopyChange={setDefaultIncludeDateInCopy} />;
+      return <SettingsView onExport={handleExport} onImport={handleImport} includeCompletedTasks={includeCompletedTasks} onIncludeCompletedTasksChange={setIncludeCompletedTasks} projectSortOrder={projectSortOrder} onProjectSortOrderChange={setProjectSortOrder} askForTaskDeleteConfirmation={askForTaskDeleteConfirmation} onAskForTaskDeleteConfirmationChange={setAskForTaskDeleteConfirmation} defaultIncludeDateInCopy={defaultIncludeDateInCopy} onDefaultIncludeDateInCopyChange={setDefaultIncludeDateInCopy} onBackupConfigChange={handleBackupConfigChange} />;
     }
     if (typeof view === 'object' && view.type === 'project') {
       const project = projects.find(p => p.id === view.id);

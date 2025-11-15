@@ -1,9 +1,18 @@
-import React, { useRef } from 'react';
-import { ArrowDownTrayIcon, ArrowUpTrayIcon } from './Icons';
+import React, { useRef, useState, useEffect } from 'react';
+import { ArrowDownTrayIcon, ArrowUpTrayIcon, FolderIcon } from './Icons';
 import { Switch } from './ui/switch';
 import { Label } from './ui/label';
 import { Select } from './ui/select';
+import { Button } from './ui/button';
 import { ProjectSortOrder } from '../types';
+import {
+  isFileSystemAccessSupported,
+  selectDirectory,
+  getBackupConfig,
+  resetToDefaultPath,
+  getDefaultDownloadsPath,
+  type BackupConfig
+} from '../utils/fileSystemAccess';
 
 interface SettingsViewProps {
   onExport: () => void;
@@ -16,13 +25,77 @@ interface SettingsViewProps {
   onAskForTaskDeleteConfirmationChange: (value: boolean) => void;
   defaultIncludeDateInCopy: boolean;
   onDefaultIncludeDateInCopyChange: (value: boolean) => void;
+  onBackupConfigChange: (config: BackupConfig) => void;
 }
 
-const SettingsView: React.FC<SettingsViewProps> = ({ onExport, onImport, includeCompletedTasks, onIncludeCompletedTasksChange, projectSortOrder, onProjectSortOrderChange, askForTaskDeleteConfirmation, onAskForTaskDeleteConfirmationChange, defaultIncludeDateInCopy, onDefaultIncludeDateInCopyChange }) => {
+const SettingsView: React.FC<SettingsViewProps> = ({
+  onExport,
+  onImport,
+  includeCompletedTasks,
+  onIncludeCompletedTasksChange,
+  projectSortOrder,
+  onProjectSortOrderChange,
+  askForTaskDeleteConfirmation,
+  onAskForTaskDeleteConfirmationChange,
+  defaultIncludeDateInCopy,
+  onDefaultIncludeDateInCopyChange,
+  onBackupConfigChange
+}) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [backupConfig, setBackupConfig] = useState<BackupConfig | null>(null);
+  const [isLoadingConfig, setIsLoadingConfig] = useState(true);
+  const [isSelectingFolder, setIsSelectingFolder] = useState(false);
+  const fileSystemSupported = isFileSystemAccessSupported();
+
+  useEffect(() => {
+    loadBackupConfig();
+  }, []);
+
+  const loadBackupConfig = async () => {
+    try {
+      const config = await getBackupConfig();
+      setBackupConfig(config);
+      onBackupConfigChange(config);
+    } catch (error) {
+      console.error('Failed to load backup config:', error);
+    } finally {
+      setIsLoadingConfig(false);
+    }
+  };
 
   const handleImportClick = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleSelectFolder = async () => {
+    if (!fileSystemSupported) return;
+
+    setIsSelectingFolder(true);
+    try {
+      const handle = await selectDirectory();
+      if (handle) {
+        const config = await getBackupConfig();
+        setBackupConfig(config);
+        onBackupConfigChange(config);
+      }
+    } catch (error) {
+      console.error('Failed to select folder:', error);
+      alert('Failed to select folder. Please try again.');
+    } finally {
+      setIsSelectingFolder(false);
+    }
+  };
+
+  const handleResetPath = async () => {
+    try {
+      await resetToDefaultPath();
+      const config = await getBackupConfig();
+      setBackupConfig(config);
+      onBackupConfigChange(config);
+    } catch (error) {
+      console.error('Failed to reset path:', error);
+      alert('Failed to reset path. Please try again.');
+    }
   };
 
   return (
@@ -120,7 +193,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onExport, onImport, include
           <p className="text-muted-foreground mb-6">
             Export your tasks and projects to a backup file, or import data from a previous backup.
           </p>
-          
+
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={onExport}
@@ -142,6 +215,61 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onExport, onImport, include
               accept=".json"
             />
           </div>
+        </div>
+
+        <div className="bg-card border border-border rounded-lg p-4 sm:p-6 shadow-sm">
+          <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-4">Auto Backup</h3>
+          <p className="text-muted-foreground mb-6">
+            {fileSystemSupported
+              ? 'Press Ctrl+S (or Cmd+S on Mac) to automatically save backup.json to your selected folder. The backup file will be overwritten each time.'
+              : 'This feature is not supported by your browser. Auto backup requires File System Access API support (available in Chrome, Edge, and Opera).'}
+          </p>
+
+          {fileSystemSupported ? (
+            <div className="space-y-4">
+              <div className="flex flex-col gap-2">
+                <Label className="text-sm font-medium text-foreground">
+                  Backup Folder
+                </Label>
+                {isLoadingConfig ? (
+                  <p className="text-sm text-muted-foreground">Loading...</p>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 px-3 py-2 bg-background border border-border rounded-md text-sm text-foreground">
+                      {backupConfig?.path || 'Not selected'}
+                    </div>
+                    <Button
+                      onClick={handleSelectFolder}
+                      disabled={isSelectingFolder}
+                      variant="outline"
+                      className="flex items-center gap-2"
+                    >
+                      <FolderIcon className="w-4 h-4" />
+                      {isSelectingFolder ? 'Selecting...' : 'Change Folder'}
+                    </Button>
+                    {backupConfig?.directoryHandle && (
+                      <Button
+                        onClick={handleResetPath}
+                        variant="outline"
+                        className="flex items-center gap-2"
+                      >
+                        Reset to Default
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Default: {backupConfig ? getDefaultDownloadsPath(backupConfig.os) : 'Downloads'}
+              </p>
+            </div>
+          ) : (
+            <div className="px-4 py-3 bg-muted/50 border border-border rounded-md">
+              <p className="text-sm text-muted-foreground">
+                This feature requires a browser that supports the File System Access API (Chrome, Edge, or Opera).
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
