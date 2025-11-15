@@ -39,13 +39,13 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onToggleComplete, onDelete, o
   };
 
   return (
-    <div className="flex items-center p-3 bg-card rounded-lg shadow-sm hover:bg-muted transition-colors">
+    <div className="flex items-start p-3 bg-card rounded-lg shadow-sm hover:bg-muted transition-colors">
       <Checkbox
         checked={task.isCompleted}
         onCheckedChange={() => onToggleComplete(task.id)}
-        className="h-5 w-5"
+        className="h-5 w-5 mt-0.5"
       />
-      <span className={`ml-3 flex-grow ${task.isCompleted ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+      <span className={`ml-3 flex-grow whitespace-pre-line ${task.isCompleted ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
         {task.title}
       </span>
       <div className="flex items-center space-x-2">
