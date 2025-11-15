@@ -175,14 +175,16 @@ const ProjectView: React.FC<ProjectViewProps> = ({ project, tasks, onAddTask, on
                       <ChevronDownIcon className="w-4 h-4" />
                     )}
                   </button>
-                  <h3 className="text-lg font-semibold text-foreground flex-1">{getHumanReadableDate(date)}</h3>
-                  <button 
-                    onClick={() => handleCopyClick(date)} 
-                    className="ml-4 text-foreground/60 hover:text-primary transition-colors"
-                    aria-label={`Copy tasks for ${getHumanReadableDate(date)}`}
-                  >
-                    <ClipboardIcon className="w-5 h-5" />
-                  </button>
+                  <h3 className="text-lg font-semibold text-foreground flex-1 flex items-center gap-2">
+                    {getHumanReadableDate(date)}
+                    <button 
+                      onClick={() => handleCopyClick(date)} 
+                      className="text-foreground/60 hover:text-primary transition-colors p-1"
+                      aria-label={`Copy tasks for ${getHumanReadableDate(date)}`}
+                    >
+                      <ClipboardIcon className="w-4 h-4" />
+                    </button>
+                  </h3>
                 </div>
                 {!isCollapsed && (
                   <div className="space-y-2 pl-6">
