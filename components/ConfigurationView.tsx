@@ -180,9 +180,9 @@ const ConfigurationView: React.FC<ConfigurationViewProps> = ({
             <Table overflow="visible">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[40%] min-w-[150px]">Key</TableHead>
-                  <TableHead className="w-[40%] min-w-[150px]">Value</TableHead>
-                  <TableHead className="w-[20%] min-w-[100px] text-right">Actions</TableHead>
+                  <TableHead style={{ width: '40%' }} className="min-w-[150px]">Key</TableHead>
+                  <TableHead style={{ width: '40%' }} className="min-w-[150px]">Value</TableHead>
+                  <TableHead style={{ width: '20%' }} className="min-w-[100px] text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

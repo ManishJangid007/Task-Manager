@@ -164,10 +164,10 @@ const KeysView: React.FC<KeysViewProps> = ({
             <Table overflow="visible">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="min-w-[200px]">Name / Site Url</TableHead>
-                  <TableHead className="min-w-[200px]">Username / Email</TableHead>
-                  <TableHead className="min-w-[200px]">Password / Key</TableHead>
-                  <TableHead className="w-[100px] text-right">Actions</TableHead>
+                  <TableHead style={{ width: '27%' }} className="min-w-[150px]">Name / Site Url</TableHead>
+                  <TableHead style={{ width: '27%' }} className="min-w-[150px]">Username / Email</TableHead>
+                  <TableHead style={{ width: '27%' }} className="min-w-[150px]">Password / Key</TableHead>
+                  <TableHead style={{ width: '19%' }} className="min-w-[100px] text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
