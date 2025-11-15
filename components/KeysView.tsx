@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Key } from '../types';
-import { PlusIcon, PencilIcon, TrashIcon, ClipboardIcon, MagnifyingGlassIcon, XMarkIcon, EyeIcon, EyeSlashIcon } from './Icons';
+import { PlusIcon, PencilIcon, TrashIcon, MagnifyingGlassIcon, XMarkIcon, EyeIcon, EyeSlashIcon } from './Icons';
 import { Button } from './ui/button';
 import {
   Table,
@@ -10,6 +10,12 @@ import {
   TableHeader,
   TableRow,
 } from './ui/table';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from './ui/tooltip';
 import Modal from './Modal';
 import KeyModal from './KeyModal';
 import {
@@ -42,10 +48,10 @@ const KeysView: React.FC<KeysViewProps> = ({
   const [editingKey, setEditingKey] = useState<Key | null>(null);
   const [deleteDialog, setDeleteDialog] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [hoveredCell, setHoveredCell] = useState<{ rowId: string; cell: string } | null>(null);
   const [showAllKeys, setShowAllKeys] = useState(false);
 
   const handleCopy = (text: string) => {
+    if (!text || text === '-') return;
     navigator.clipboard.writeText(text);
     setNotification('Copied to clipboard!');
   };
@@ -120,7 +126,7 @@ const KeysView: React.FC<KeysViewProps> = ({
             </Button>
           </div>
         </div>
-        
+
         <div className="relative">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
@@ -148,109 +154,106 @@ const KeysView: React.FC<KeysViewProps> = ({
             {keys.length === 0
               ? 'No keys yet. Add one to get started!'
               : searchQuery
-              ? 'No keys found matching your search.'
-              : 'No keys yet. Add one to get started!'}
+                ? 'No keys found matching your search.'
+                : 'No keys yet. Add one to get started!'}
           </p>
         </div>
       ) : (
-        <div className="border border-border rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="min-w-[200px]">Name / Site Url</TableHead>
-                  <TableHead className="min-w-[200px]">Username / Email</TableHead>
-                  <TableHead className="min-w-[200px]">Password / Key</TableHead>
-                  <TableHead className="w-[100px] text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredKeys.map((key) => (
-                  <TableRow key={key.id}>
-                    <TableCell
-                      className="relative group"
-                      onMouseEnter={() => setHoveredCell({ rowId: key.id, cell: 'nameUrl' })}
-                      onMouseLeave={() => setHoveredCell(null)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="truncate pr-8">
-                          {getDisplayValue(key, 'nameUrl') || '-'}
-                        </span>
-                        {hoveredCell?.rowId === key.id && hoveredCell?.cell === 'nameUrl' && (
-                          <button
-                            onClick={() => handleCopy(getDisplayValue(key, 'nameUrl'))}
-                            className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 bg-card border border-border rounded-md shadow-sm hover:bg-muted transition-colors opacity-100 z-10"
-                            title="Copy"
-                          >
-                            <ClipboardIcon className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell
-                      className="relative group"
-                      onMouseEnter={() => setHoveredCell({ rowId: key.id, cell: 'usernameEmail' })}
-                      onMouseLeave={() => setHoveredCell(null)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="truncate pr-8">
-                          {getDisplayValue(key, 'usernameEmail') || '-'}
-                        </span>
-                        {hoveredCell?.rowId === key.id && hoveredCell?.cell === 'usernameEmail' && (
-                          <button
-                            onClick={() => handleCopy(getDisplayValue(key, 'usernameEmail'))}
-                            className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 bg-card border border-border rounded-md shadow-sm hover:bg-muted transition-colors opacity-100 z-10"
-                            title="Copy"
-                          >
-                            <ClipboardIcon className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell
-                      className="relative group"
-                      onMouseEnter={() => setHoveredCell({ rowId: key.id, cell: 'passwordKey' })}
-                      onMouseLeave={() => setHoveredCell(null)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="truncate pr-8 font-mono">
-                          {getDisplayValue(key, 'passwordKey') || '-'}
-                        </span>
-                        {hoveredCell?.rowId === key.id && hoveredCell?.cell === 'passwordKey' && (
-                          <button
-                            onClick={() => handleCopy(key.passwordKey || '')}
-                            className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 bg-card border border-border rounded-md shadow-sm hover:bg-muted transition-colors opacity-100 z-10"
-                            title="Copy"
-                          >
-                            <ClipboardIcon className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => setEditingKey(key)}
-                          className="p-2 text-foreground/60 hover:text-primary hover:bg-muted rounded-md transition-colors"
-                          title="Edit"
-                        >
-                          <PencilIcon className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => setDeleteDialog(key.id)}
-                          className="p-2 text-foreground/60 hover:text-destructive hover:bg-muted rounded-md transition-colors"
-                          title="Delete"
-                        >
-                          <TrashIcon className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </TableCell>
+        <TooltipProvider>
+          <div className="border border-border rounded-lg overflow-hidden">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="min-w-[200px]">Name / Site Url</TableHead>
+                    <TableHead className="min-w-[200px]">Username / Email</TableHead>
+                    <TableHead className="min-w-[200px]">Password / Key</TableHead>
+                    <TableHead className="w-[100px] text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredKeys.map((key) => (
+                    <TableRow key={key.id}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <TableCell
+                            className="cursor-pointer group relative overflow-visible"
+                            onClick={() => handleCopy(getDisplayValue(key, 'nameUrl'))}
+                          >
+                            <span className="truncate block transition-all duration-300 group-hover:scale-110 group-hover:translate-y-[-2px] group-hover:drop-shadow-md">
+                              {getDisplayValue(key, 'nameUrl') || '-'}
+                            </span>
+                          </TableCell>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Click to copy</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <TableCell
+                            className="cursor-pointer group relative overflow-visible"
+                            onClick={() => handleCopy(getDisplayValue(key, 'usernameEmail'))}
+                          >
+                            <span className="truncate block transition-all duration-300 group-hover:scale-110 group-hover:translate-y-[-2px] group-hover:drop-shadow-md">
+                              {getDisplayValue(key, 'usernameEmail') || '-'}
+                            </span>
+                          </TableCell>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Click to copy</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <TableCell
+                            className="cursor-pointer font-mono group relative overflow-visible"
+                            onClick={() => {
+                              const actualValue = key.passwordKey || '';
+                              if (actualValue) {
+                                handleCopy(actualValue);
+                              }
+                            }}
+                          >
+                            <span className="truncate block transition-all duration-300 group-hover:scale-110 group-hover:translate-y-[-2px] group-hover:drop-shadow-md">
+                              <span className="group-hover:hidden">
+                                {getDisplayValue(key, 'passwordKey') || '-'}
+                              </span>
+                              <span className="hidden group-hover:inline">
+                                {key.passwordKey || '-'}
+                              </span>
+                            </span>
+                          </TableCell>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Click to copy</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => setEditingKey(key)}
+                            className="p-2 text-foreground/60 hover:text-primary hover:bg-muted rounded-md transition-colors"
+                            title="Edit"
+                          >
+                            <PencilIcon className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => setDeleteDialog(key.id)}
+                            className="p-2 text-foreground/60 hover:text-destructive hover:bg-muted rounded-md transition-colors"
+                            title="Delete"
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
-        </div>
+        </TooltipProvider>
       )}
 
       {isAddModalOpen && (
