@@ -298,10 +298,10 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, projects, onUpdateTask, on
                 const isCollapsed = isProjectCollapsed(projectId, date);
                 return (
                   <div key={projectId} className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <button
+                    <div className="flex items-center">
+                      <div
                         onClick={() => toggleProjectCollapse(projectId, date)}
-                        className="text-sm font-semibold text-foreground/80 pl-4 border-l-2 border-primary/30 flex items-center gap-2 flex-1 text-left hover:text-primary transition-colors"
+                        className="text-sm font-semibold text-foreground/80 pl-4 border-l-2 border-primary/30 flex items-center gap-2 flex-1 text-left hover:text-primary transition-colors cursor-pointer"
                       >
                         {isCollapsed ? (
                           <ChevronRightIcon className="w-4 h-4 flex-shrink-0" />
@@ -323,7 +323,7 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, projects, onUpdateTask, on
                         <span className="text-xs text-muted-foreground font-normal">
                           ({tasksByProject[projectId].length})
                         </span>
-                      </button>
+                      </div>
                     </div>
                     {!isCollapsed && (
                       <div className="space-y-1 pl-4">
