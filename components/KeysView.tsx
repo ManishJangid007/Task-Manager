@@ -160,98 +160,96 @@ const KeysView: React.FC<KeysViewProps> = ({
         </div>
       ) : (
         <TooltipProvider>
-          <div className="border border-border rounded-lg overflow-hidden">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="min-w-[200px]">Name / Site Url</TableHead>
-                    <TableHead className="min-w-[200px]">Username / Email</TableHead>
-                    <TableHead className="min-w-[200px]">Password / Key</TableHead>
-                    <TableHead className="w-[100px] text-right">Actions</TableHead>
+          <div className="border border-border rounded-lg p-2">
+            <Table overflow="visible">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="min-w-[200px]">Name / Site Url</TableHead>
+                  <TableHead className="min-w-[200px]">Username / Email</TableHead>
+                  <TableHead className="min-w-[200px]">Password / Key</TableHead>
+                  <TableHead className="w-[100px] text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredKeys.map((key) => (
+                  <TableRow key={key.id}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <TableCell
+                          className="cursor-pointer group relative"
+                          onClick={() => handleCopy(getDisplayValue(key, 'nameUrl'))}
+                        >
+                          <span className="truncate block transition-all duration-300 group-hover:scale-110 group-hover:translate-y-[-2px] group-hover:drop-shadow-md will-change-transform">
+                            {getDisplayValue(key, 'nameUrl') || '-'}
+                          </span>
+                        </TableCell>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Click to copy</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <TableCell
+                          className="cursor-pointer group relative"
+                          onClick={() => handleCopy(getDisplayValue(key, 'usernameEmail'))}
+                        >
+                          <span className="truncate block transition-all duration-300 group-hover:scale-110 group-hover:translate-y-[-2px] group-hover:drop-shadow-md will-change-transform">
+                            {getDisplayValue(key, 'usernameEmail') || '-'}
+                          </span>
+                        </TableCell>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Click to copy</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <TableCell
+                          className="cursor-pointer font-mono group relative"
+                          onClick={() => {
+                            const actualValue = key.passwordKey || '';
+                            if (actualValue) {
+                              handleCopy(actualValue);
+                            }
+                          }}
+                        >
+                          <span className="truncate block transition-all duration-300 group-hover:scale-110 group-hover:translate-y-[-2px] group-hover:drop-shadow-md will-change-transform">
+                            <span className="group-hover:hidden">
+                              {getDisplayValue(key, 'passwordKey') || '-'}
+                            </span>
+                            <span className="hidden group-hover:inline">
+                              {key.passwordKey || '-'}
+                            </span>
+                          </span>
+                        </TableCell>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Click to copy</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <TableCell>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => setEditingKey(key)}
+                          className="p-2 text-foreground/60 hover:text-primary hover:bg-muted rounded-md transition-colors"
+                          title="Edit"
+                        >
+                          <PencilIcon className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => setDeleteDialog(key.id)}
+                          className="p-2 text-foreground/60 hover:text-destructive hover:bg-muted rounded-md transition-colors"
+                          title="Delete"
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredKeys.map((key) => (
-                    <TableRow key={key.id}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <TableCell
-                            className="cursor-pointer group relative overflow-visible"
-                            onClick={() => handleCopy(getDisplayValue(key, 'nameUrl'))}
-                          >
-                            <span className="truncate block transition-all duration-300 group-hover:scale-110 group-hover:translate-y-[-2px] group-hover:drop-shadow-md">
-                              {getDisplayValue(key, 'nameUrl') || '-'}
-                            </span>
-                          </TableCell>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Click to copy</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <TableCell
-                            className="cursor-pointer group relative overflow-visible"
-                            onClick={() => handleCopy(getDisplayValue(key, 'usernameEmail'))}
-                          >
-                            <span className="truncate block transition-all duration-300 group-hover:scale-110 group-hover:translate-y-[-2px] group-hover:drop-shadow-md">
-                              {getDisplayValue(key, 'usernameEmail') || '-'}
-                            </span>
-                          </TableCell>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Click to copy</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <TableCell
-                            className="cursor-pointer font-mono group relative overflow-visible"
-                            onClick={() => {
-                              const actualValue = key.passwordKey || '';
-                              if (actualValue) {
-                                handleCopy(actualValue);
-                              }
-                            }}
-                          >
-                            <span className="truncate block transition-all duration-300 group-hover:scale-110 group-hover:translate-y-[-2px] group-hover:drop-shadow-md">
-                              <span className="group-hover:hidden">
-                                {getDisplayValue(key, 'passwordKey') || '-'}
-                              </span>
-                              <span className="hidden group-hover:inline">
-                                {key.passwordKey || '-'}
-                              </span>
-                            </span>
-                          </TableCell>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Click to copy</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      <TableCell>
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => setEditingKey(key)}
-                            className="p-2 text-foreground/60 hover:text-primary hover:bg-muted rounded-md transition-colors"
-                            title="Edit"
-                          >
-                            <PencilIcon className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => setDeleteDialog(key.id)}
-                            className="p-2 text-foreground/60 hover:text-destructive hover:bg-muted rounded-md transition-colors"
-                            title="Delete"
-                          >
-                            <TrashIcon className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         </TooltipProvider>
       )}

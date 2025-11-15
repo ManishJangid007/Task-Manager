@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Project, Configuration } from '../types';
-import { PlusIcon, PencilIcon, TrashIcon, ArrowLeftIcon, ClipboardIcon, MagnifyingGlassIcon, XMarkIcon } from './Icons';
+import { PlusIcon, PencilIcon, TrashIcon, ArrowLeftIcon, MagnifyingGlassIcon, XMarkIcon } from './Icons';
 import { Button } from './ui/button';
 import {
   Table,
@@ -10,6 +10,12 @@ import {
   TableHeader,
   TableRow,
 } from './ui/table';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from './ui/tooltip';
 import Modal from './Modal';
 import ConfigurationModal from './ConfigurationModal';
 import {
@@ -45,7 +51,6 @@ const ConfigurationView: React.FC<ConfigurationViewProps> = ({
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingConfig, setEditingConfig] = useState<Configuration | null>(null);
   const [deleteDialog, setDeleteDialog] = useState<string | null>(null);
-  const [hoveredCell, setHoveredCell] = useState<{ rowId: string; cell: 'key' | 'value' } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const isLink = (value: string): boolean => {
@@ -69,6 +74,7 @@ const ConfigurationView: React.FC<ConfigurationViewProps> = ({
   };
 
   const handleCopy = (text: string) => {
+    if (!text || text === '-') return;
     navigator.clipboard.writeText(text);
     setNotification('Copied to clipboard!');
   };
@@ -169,88 +175,87 @@ const ConfigurationView: React.FC<ConfigurationViewProps> = ({
           </p>
         </div>
       ) : (
-        <div className="border border-border rounded-lg overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[40%]">Key</TableHead>
-                <TableHead className="w-[40%]">Value</TableHead>
-                <TableHead className="w-[20%] text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredConfigurations.map((config) => (
-                <TableRow key={config.id}>
-                  <TableCell
-                    className="relative group"
-                    onMouseEnter={() => setHoveredCell({ rowId: config.id, cell: 'key' })}
-                    onMouseLeave={() => setHoveredCell(null)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="truncate pr-8">{config.key}</span>
-                      {hoveredCell?.rowId === config.id && hoveredCell?.cell === 'key' && (
-                        <button
-                          onClick={() => handleCopy(config.key)}
-                          className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 bg-card border border-border rounded-md shadow-sm hover:bg-muted transition-colors opacity-100 z-10"
-                          title="Copy key"
-                        >
-                          <ClipboardIcon className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell
-                    className="relative group"
-                    onMouseEnter={() => setHoveredCell({ rowId: config.id, cell: 'value' })}
-                    onMouseLeave={() => setHoveredCell(null)}
-                  >
-                    <div className="flex items-center justify-between">
-                      {isLink(config.value) ? (
-                        <a
-                          href={config.value.startsWith('http') ? config.value : `https://${config.value}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline truncate pr-8"
-                        >
-                          {config.value}
-                        </a>
-                      ) : (
-                        <span className="truncate pr-8">{config.value}</span>
-                      )}
-                      {hoveredCell?.rowId === config.id && hoveredCell?.cell === 'value' && (
-                        <button
-                          onClick={() => handleCopy(config.value)}
-                          className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 bg-card border border-border rounded-md shadow-sm hover:bg-muted transition-colors opacity-100 z-10"
-                          title="Copy value"
-                        >
-                          <ClipboardIcon className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => setEditingConfig(config)}
-                        className="p-2 text-foreground/60 hover:text-primary hover:bg-muted rounded-md transition-colors"
-                        title="Edit"
-                      >
-                        <PencilIcon className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => setDeleteDialog(config.id)}
-                        className="p-2 text-foreground/60 hover:text-destructive hover:bg-muted rounded-md transition-colors"
-                        title="Delete"
-                      >
-                        <TrashIcon className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </TableCell>
+        <TooltipProvider>
+          <div className="border border-border rounded-lg p-2">
+            <Table overflow="visible">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[40%]">Key</TableHead>
+                  <TableHead className="w-[40%]">Value</TableHead>
+                  <TableHead className="w-[20%] text-right">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {filteredConfigurations.map((config) => (
+                  <TableRow key={config.id}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <TableCell
+                          className="cursor-pointer group relative"
+                          onClick={() => handleCopy(config.key)}
+                        >
+                          <span className="truncate block transition-all duration-300 group-hover:scale-110 group-hover:translate-y-[-2px] group-hover:drop-shadow-md will-change-transform">
+                            {config.key}
+                          </span>
+                        </TableCell>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Click to copy</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <TableCell
+                          className="cursor-pointer group relative"
+                          onClick={() => handleCopy(config.value)}
+                        >
+                          {isLink(config.value) ? (
+                            <a
+                              href={config.value.startsWith('http') ? config.value : `https://${config.value}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                              }}
+                              className="text-primary hover:underline truncate block transition-all duration-300 group-hover:scale-110 group-hover:translate-y-[-2px] group-hover:drop-shadow-md will-change-transform"
+                            >
+                              {config.value}
+                            </a>
+                          ) : (
+                            <span className="truncate block transition-all duration-300 group-hover:scale-110 group-hover:translate-y-[-2px] group-hover:drop-shadow-md will-change-transform">
+                              {config.value}
+                            </span>
+                          )}
+                        </TableCell>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Click to copy</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <TableCell>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => setEditingConfig(config)}
+                          className="p-2 text-foreground/60 hover:text-primary hover:bg-muted rounded-md transition-colors"
+                          title="Edit"
+                        >
+                          <PencilIcon className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => setDeleteDialog(config.id)}
+                          className="p-2 text-foreground/60 hover:text-destructive hover:bg-muted rounded-md transition-colors"
+                          title="Delete"
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </TooltipProvider>
       )}
 
       {isAddModalOpen && (
