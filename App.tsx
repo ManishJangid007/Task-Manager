@@ -184,6 +184,7 @@ function App() {
       const newProject: Project = { id: `proj_${Date.now()}`, name: name.trim() };
       setProjects([...projects, newProject]);
       setModalState(null);
+      setView({ type: 'project', id: newProject.id });
     }
   };
 
@@ -422,6 +423,7 @@ function App() {
           setSidebarOpen(false); // Close sidebar on mobile when navigating
         }}
         onAddProject={handleAddProjectClick}
+        onCreateProject={handleCreateProject}
         onEditProject={handleEditProjectClick}
         onDeleteProject={handleDeleteProject}
         onTogglePin={handleTogglePin}

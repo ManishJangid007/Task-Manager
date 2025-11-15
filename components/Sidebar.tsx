@@ -19,6 +19,7 @@ interface SidebarProps {
   view: View;
   setView: (view: View) => void;
   onAddProject: () => void;
+  onCreateProject?: (name: string) => void;
   onEditProject: (project: Project) => void;
   onDeleteProject: (projectId: string) => void;
   onTogglePin: (projectId: string) => void;
@@ -29,7 +30,7 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ projects, tasks, view, setView, onAddProject, onEditProject, onDeleteProject, onTogglePin, onQuickAddTask, includeCompletedTasks, projectSortOrder, isOpen, onClose }) => {
+const Sidebar: React.FC<SidebarProps> = ({ projects, tasks, view, setView, onAddProject, onCreateProject, onEditProject, onDeleteProject, onTogglePin, onQuickAddTask, includeCompletedTasks, projectSortOrder, isOpen, onClose }) => {
   const activeProject = typeof view === 'object' && view.type === 'project' ? view.id : null;
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -208,7 +209,25 @@ const Sidebar: React.FC<SidebarProps> = ({ projects, tasks, view, setView, onAdd
           <ul className="space-y-1">
             {filteredProjects.length === 0 ? (
               <li className="px-4 py-2 text-sm text-muted-foreground text-center">
-                {searchQuery ? 'No projects found' : 'No projects yet'}
+                {searchQuery ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <span>No projects found</span>
+                    {onCreateProject && (
+                      <button
+                        onClick={() => {
+                          onCreateProject(searchQuery.trim());
+                          setSearchQuery('');
+                        }}
+                        className="mt-1 px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors flex items-center gap-1.5"
+                      >
+                        <PlusIcon className="w-3.5 h-3.5" />
+                        Add "{searchQuery.trim()}"
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  'No projects yet'
+                )}
               </li>
             ) : (
               filteredProjects.map(project => (
