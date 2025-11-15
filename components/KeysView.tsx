@@ -160,7 +160,7 @@ const KeysView: React.FC<KeysViewProps> = ({
         </div>
       ) : (
         <TooltipProvider>
-          <div className="border border-border rounded-lg p-2">
+          <div className="border border-border rounded-lg p-2 overflow-x-auto">
             <Table overflow="visible">
               <TableHeader>
                 <TableRow>

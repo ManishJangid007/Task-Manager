@@ -176,13 +176,13 @@ const ConfigurationView: React.FC<ConfigurationViewProps> = ({
         </div>
       ) : (
         <TooltipProvider>
-          <div className="border border-border rounded-lg p-2">
+          <div className="border border-border rounded-lg p-2 overflow-x-auto">
             <Table overflow="visible">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[40%]">Key</TableHead>
-                  <TableHead className="w-[40%]">Value</TableHead>
-                  <TableHead className="w-[20%] text-right">Actions</TableHead>
+                  <TableHead className="w-[40%] min-w-[150px]">Key</TableHead>
+                  <TableHead className="w-[40%] min-w-[150px]">Value</TableHead>
+                  <TableHead className="w-[20%] min-w-[100px] text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
