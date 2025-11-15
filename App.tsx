@@ -332,7 +332,7 @@ function App() {
 
   const renderView = () => {
     if (view === 'daily') {
-      return <DailyView tasks={tasks} projects={projects} onUpdateTask={handleUpdateTask} onDeleteTask={handleDeleteTask} onEditTask={handleEditTaskClick} setNotification={setNotification} />;
+      return <DailyView tasks={tasks} projects={projects} onUpdateTask={handleUpdateTask} onDeleteTask={handleDeleteTask} onEditTask={handleEditTaskClick} setNotification={setNotification} defaultIncludeDateInCopy={defaultIncludeDateInCopy} />;
     }
     if (view === 'reports') {
       return <ReportsView tasks={tasks} projects={projects} />;

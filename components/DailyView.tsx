@@ -6,6 +6,7 @@ import { ClipboardIcon, XCircleIcon, ChevronDownIcon, ChevronRightIcon } from '.
 import { DatePicker } from './ui/date-picker';
 import Modal from './Modal';
 import SimpleCopyModal from './SimpleCopyModal';
+import CopyTasksModal from './CopyTasksModal';
 
 const getPriorityOrder = (priority?: TaskPriority): number => {
   switch (priority) {
@@ -27,11 +28,13 @@ interface DailyViewProps {
   onDeleteTask: (taskId: string) => void;
   onEditTask: (task: Task) => void;
   setNotification: (message: string) => void;
+  defaultIncludeDateInCopy?: boolean;
 }
 
-const DailyView: React.FC<DailyViewProps> = ({ tasks, projects, onUpdateTask, onDeleteTask, onEditTask, setNotification }) => {
+const DailyView: React.FC<DailyViewProps> = ({ tasks, projects, onUpdateTask, onDeleteTask, onEditTask, setNotification, defaultIncludeDateInCopy = true }) => {
   const [filterDate, setFilterDate] = useState('');
   const [copyModalDate, setCopyModalDate] = useState<string | null>(null);
+  const [copyModalProject, setCopyModalProject] = useState<{ projectId: string; date: string } | null>(null);
   // Track user's explicit state: collapsed projects (for today) and expanded projects (for other dates)
   const [collapsedProjects, setCollapsedProjects] = useState<Set<string>>(new Set());
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
@@ -175,6 +178,23 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, projects, onUpdateTask, on
     setCopyModalDate(null);
   };
 
+  const handleProjectCopyClick = (projectId: string, date: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent the project row from collapsing/expanding
+    const projectTasks = (groupedTasks[date] || []).filter(t => t.projectId === projectId);
+    if (projectTasks.length === 0) {
+      setNotification("No tasks for this project to copy.");
+      return;
+    }
+    setCopyModalProject({ projectId, date });
+  };
+
+  const handleProjectCopyTasks = (content: string, projectId: string, date: string) => {
+    navigator.clipboard.writeText(content);
+    const projectTasks = (groupedTasks[date] || []).filter(t => t.projectId === projectId);
+    setNotification(`Copied ${projectTasks.length} task(s) for ${getProjectName(projectId)}!`);
+    setCopyModalProject(null);
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -204,6 +224,18 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, projects, onUpdateTask, on
             onCopy={(content) => handleCopyTasks(content, copyModalDate)}
             onCancel={() => setCopyModalDate(null)}
             getProjectName={getProjectName}
+          />
+        </Modal>
+      )}
+
+      {copyModalProject && (
+        <Modal isOpen={true} onClose={() => setCopyModalProject(null)} title="Copy Tasks">
+          <CopyTasksModal
+            tasks={(groupedTasks[copyModalProject.date] || []).filter(t => t.projectId === copyModalProject.projectId)}
+            date={copyModalProject.date}
+            onCopy={(content) => handleProjectCopyTasks(content, copyModalProject.projectId, copyModalProject.date)}
+            onCancel={() => setCopyModalProject(null)}
+            defaultIncludeDate={defaultIncludeDateInCopy}
           />
         </Modal>
       )}
@@ -266,20 +298,33 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, projects, onUpdateTask, on
                 const isCollapsed = isProjectCollapsed(projectId, date);
                 return (
                   <div key={projectId} className="space-y-2">
-                    <button
-                      onClick={() => toggleProjectCollapse(projectId, date)}
-                      className="text-sm font-semibold text-foreground/80 pl-4 border-l-2 border-primary/30 flex items-center gap-2 w-full text-left hover:text-primary transition-colors"
-                    >
-                      {isCollapsed ? (
-                        <ChevronRightIcon className="w-4 h-4 flex-shrink-0" />
-                      ) : (
-                        <ChevronDownIcon className="w-4 h-4 flex-shrink-0" />
-                      )}
-                      {getProjectName(projectId)}
-                      <span className="text-xs text-muted-foreground font-normal">
-                        ({tasksByProject[projectId].length})
-                      </span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => toggleProjectCollapse(projectId, date)}
+                        className="text-sm font-semibold text-foreground/80 pl-4 border-l-2 border-primary/30 flex items-center gap-2 flex-1 text-left hover:text-primary transition-colors"
+                      >
+                        {isCollapsed ? (
+                          <ChevronRightIcon className="w-4 h-4 flex-shrink-0" />
+                        ) : (
+                          <ChevronDownIcon className="w-4 h-4 flex-shrink-0" />
+                        )}
+                        {getProjectName(projectId)}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleProjectCopyClick(projectId, date, e);
+                          }}
+                          className="text-foreground/60 hover:text-primary transition-colors p-1 ml-1"
+                          title="Copy project tasks"
+                          aria-label="Copy project tasks"
+                        >
+                          <ClipboardIcon className="w-4 h-4" />
+                        </button>
+                        <span className="text-xs text-muted-foreground font-normal">
+                          ({tasksByProject[projectId].length})
+                        </span>
+                      </button>
+                    </div>
                     {!isCollapsed && (
                       <div className="space-y-1 pl-4">
                         {tasksByProject[projectId]
