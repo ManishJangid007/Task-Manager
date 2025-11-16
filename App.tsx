@@ -17,7 +17,7 @@ import {
   type BackupConfig 
 } from './utils/fileSystemAccess';
 import { getTodayDateString } from './utils/dateUtils';
-import { CheckCircleIcon, BarsIcon, PriorityHighIcon, PriorityMediumIcon, PriorityLowIcon } from './components/Icons';
+import { CheckCircleIcon, BarsIcon, PriorityHighIcon, PriorityMediumIcon, PriorityLowIcon, PlusIcon, TrashIcon, PencilIcon } from './components/Icons';
 import Modal from './components/Modal';
 import BatchTaskModal from './components/BatchTaskModal';
 import ProjectBatchTaskModal from './components/ProjectBatchTaskModal';
@@ -91,13 +91,25 @@ const TaskForm: React.FC<{
   onSubmit: (title: string, date: string, priority: TaskPriority) => void;
   onCancel: () => void;
   task?: Task;
-}> = ({ onSubmit, onCancel, task }) => {
+  tasks?: Task[];
+  onUpdateTask?: (task: Task) => void;
+  onDeleteTask?: (taskId: string) => void;
+  onEditTask?: (task: Task) => void;
+}> = ({ onSubmit, onCancel, task, tasks = [], onUpdateTask, onDeleteTask, onEditTask }) => {
   const [title, setTitle] = useState(task?.title || '');
   const [date, setDate] = useState(task?.date || getTodayDateString());
   const [priority, setPriority] = useState<TaskPriority>(task?.priority || 'medium');
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
+  const [newSubtaskPriority, setNewSubtaskPriority] = useState<TaskPriority>('medium');
+  const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
+  const [editingSubtaskTitle, setEditingSubtaskTitle] = useState('');
+  const [editingSubtaskPriority, setEditingSubtaskPriority] = useState<TaskPriority>('medium');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const subtaskInputRef = useRef<HTMLInputElement>(null);
 
   const isEditMode = !!task;
+  const isSubtask = !!task?.parentTaskId;
+  const subtasks = task ? tasks.filter(t => t.parentTaskId === task.id) : [];
 
   const getPriorityIcon = (priority: TaskPriority) => {
     switch (priority) {
@@ -109,6 +121,19 @@ const TaskForm: React.FC<{
         return <PriorityLowIcon className="w-4 h-4" />;
       default:
         return <PriorityMediumIcon className="w-4 h-4" />;
+    }
+  };
+
+  const getPriorityColor = (priority?: TaskPriority) => {
+    switch (priority) {
+      case 'high':
+        return 'text-destructive';
+      case 'medium':
+        return 'text-yellow-500';
+      case 'low':
+        return 'text-muted-foreground';
+      default:
+        return 'text-yellow-500';
     }
   };
 
@@ -131,6 +156,55 @@ const TaskForm: React.FC<{
     // Shift+Enter allows default behavior (new line in textarea)
   };
 
+  const handleAddSubtask = (e?: React.MouseEvent | React.KeyboardEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (!task || !newSubtaskTitle.trim() || !onUpdateTask) return;
+    
+    const newSubtask: Task = {
+      id: `task_${Date.now()}`,
+      projectId: task.projectId,
+      title: newSubtaskTitle.trim(),
+      date: task.date,
+      isCompleted: false,
+      priority: newSubtaskPriority,
+      parentTaskId: task.id,
+    };
+    
+    onUpdateTask(newSubtask);
+    setNewSubtaskTitle('');
+    setNewSubtaskPriority('medium');
+    // Focus the input after a short delay to ensure state has updated
+    setTimeout(() => {
+      subtaskInputRef.current?.focus();
+    }, 0);
+  };
+
+  const handleUpdateSubtask = (subtask: Task) => {
+    if (!onUpdateTask) return;
+    onUpdateTask(subtask);
+    setEditingSubtaskId(null);
+    setEditingSubtaskTitle('');
+  };
+
+  const handleDeleteSubtask = (subtaskId: string) => {
+    if (!onDeleteTask) return;
+    onDeleteTask(subtaskId);
+  };
+
+  const handleStartEditSubtask = (subtask: Task) => {
+    setEditingSubtaskId(subtask.id);
+    setEditingSubtaskTitle(subtask.title);
+    setEditingSubtaskPriority(subtask.priority || 'medium');
+  };
+
+  const handleCancelEditSubtask = () => {
+    setEditingSubtaskId(null);
+    setEditingSubtaskTitle('');
+  };
+
   useEffect(() => {
     // Adjust height when component mounts or title changes
     if (textareaRef.current) {
@@ -138,6 +212,13 @@ const TaskForm: React.FC<{
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   }, [title]);
+
+  useEffect(() => {
+    // Focus subtask input when it becomes visible
+    if (!isSubtask && subtaskInputRef.current && subtasks.length === 0) {
+      subtaskInputRef.current.focus();
+    }
+  }, [isSubtask, subtasks.length]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -187,6 +268,134 @@ const TaskForm: React.FC<{
           placeholder="Pick a date"
         />
       </div>
+
+      {/* Subtasks Section - Only show if editing a task (not a subtask) */}
+      {isEditMode && !isSubtask && (
+        <div className="space-y-3 pt-2 border-t border-border">
+          <div className="flex items-center justify-between">
+            <label className="block text-sm font-medium text-foreground">
+              Subtasks
+            </label>
+          </div>
+          
+          {/* Existing Subtasks */}
+          {subtasks.length > 0 && (
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {subtasks.map((subtask) => (
+                <div key={subtask.id} className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                  {editingSubtaskId === subtask.id ? (
+                    <>
+                      <input
+                        type="text"
+                        value={editingSubtaskTitle}
+                        onChange={(e) => setEditingSubtaskTitle(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleUpdateSubtask({ ...subtask, title: editingSubtaskTitle.trim(), priority: editingSubtaskPriority });
+                          } else if (e.key === 'Escape') {
+                            handleCancelEditSubtask();
+                          }
+                        }}
+                        className="flex-1 px-2 py-1 text-sm bg-background border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                        autoFocus
+                      />
+                      <Select
+                        value={editingSubtaskPriority}
+                        onChange={(value) => setEditingSubtaskPriority(value as TaskPriority)}
+                        options={priorityOptions}
+                        className="w-24 h-8"
+                        showIconInField={true}
+                        showIconInDropdown={true}
+                        iconOnlyInField={true}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateSubtask({ ...subtask, title: editingSubtaskTitle.trim(), priority: editingSubtaskPriority })}
+                        className="px-2 py-1 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90"
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleCancelEditSubtask}
+                        className="px-2 py-1 text-xs bg-card border border-border rounded hover:bg-muted"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="flex-1 text-sm text-foreground">{subtask.title}</span>
+                      <span className={getPriorityColor(subtask.priority)}>
+                        {getPriorityIcon(subtask.priority)}
+                      </span>
+                      {onEditTask && (
+                        <button
+                          type="button"
+                          onClick={() => handleStartEditSubtask(subtask)}
+                          className="p-1 text-foreground/60 hover:text-primary transition-colors"
+                          title="Edit subtask"
+                        >
+                          <PencilIcon className="w-4 h-4" />
+                        </button>
+                      )}
+                      {onDeleteTask && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteSubtask(subtask.id)}
+                          className="p-1 text-foreground/60 hover:text-destructive transition-colors"
+                          title="Delete subtask"
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Add New Subtask */}
+          <div className="flex items-center gap-2">
+            <input
+              ref={subtaskInputRef}
+              type="text"
+              value={newSubtaskTitle}
+              onChange={(e) => setNewSubtaskTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleAddSubtask(e);
+                }
+              }}
+              placeholder="Add subtask..."
+              className="flex-1 px-3 py-2 text-sm bg-card border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+            <Select
+              value={newSubtaskPriority}
+              onChange={(value) => setNewSubtaskPriority(value as TaskPriority)}
+              options={priorityOptions}
+              className="w-24 h-9"
+              showIconInField={true}
+              showIconInDropdown={true}
+              iconOnlyInField={true}
+            />
+            <button
+              type="button"
+              onClick={(e) => handleAddSubtask(e)}
+              disabled={!newSubtaskTitle.trim()}
+              className="px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+            >
+              <PlusIcon className="w-4 h-4" />
+              Add
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-end space-x-2 pt-2">
         <button
           type="button"
@@ -423,9 +632,17 @@ function App() {
 
 
   const handleUpdateTask = (updatedTask: Task) => {
-    setTasks(tasks.map(task => task.id === updatedTask.id ? updatedTask : task));
-    if (modalState?.type === 'editTask') {
-      setModalState(null);
+    const existingTask = tasks.find(t => t.id === updatedTask.id);
+    if (existingTask) {
+      // Update existing task
+      setTasks(tasks.map(task => task.id === updatedTask.id ? updatedTask : task));
+      // Only close modal if updating the task being edited (not a subtask)
+      if (modalState?.type === 'editTask' && modalState.task.id === updatedTask.id && !updatedTask.parentTaskId) {
+        setModalState(null);
+      }
+    } else {
+      // Add new task (e.g., when adding a subtask)
+      setTasks([...tasks, updatedTask]);
     }
   };
 
@@ -715,8 +932,12 @@ function App() {
           <Modal isOpen={true} onClose={() => setModalState(null)} title="Edit Task" size="large">
             <TaskForm
               task={modalState.task}
+              tasks={tasks}
               onSubmit={(title, date, priority) => handleUpdateTask({ ...modalState.task, title, date, priority })}
               onCancel={() => setModalState(null)}
+              onUpdateTask={handleUpdateTask}
+              onDeleteTask={handleDeleteTask}
+              onEditTask={handleEditTaskClick}
             />
           </Modal>
         );
