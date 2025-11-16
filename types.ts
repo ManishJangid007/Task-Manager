@@ -8,6 +8,7 @@ export interface Task {
   date: string; // YYYY-MM-DD
   isCompleted: boolean;
   priority?: TaskPriority;
+  parentTaskId?: string; // ID of parent task for subtasks
 }
 
 export interface Project {

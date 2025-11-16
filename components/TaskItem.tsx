@@ -9,9 +9,10 @@ interface TaskItemProps {
   onToggleComplete: (taskId: string) => void;
   onDelete: (taskId: string) => void;
   onEdit: (task: Task) => void;
+  isSubtask?: boolean;
 }
 
-const TaskItem: React.FC<TaskItemProps> = ({ task, onToggleComplete, onDelete, onEdit }) => {
+const TaskItem: React.FC<TaskItemProps> = ({ task, onToggleComplete, onDelete, onEdit, isSubtask = false }) => {
   const getPriorityIcon = (priority?: string) => {
     switch (priority) {
       case 'high':
@@ -39,7 +40,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onToggleComplete, onDelete, o
   };
 
   return (
-    <div className="flex items-start p-3 bg-card rounded-lg shadow-sm hover:bg-muted transition-colors gap-2 sm:gap-0">
+    <div className={`flex items-start p-3 bg-card rounded-lg shadow-sm hover:bg-muted transition-colors gap-2 sm:gap-0 ${isSubtask ? 'ml-4 sm:ml-6' : ''}`}>
       <Checkbox
         checked={task.isCompleted}
         onCheckedChange={() => onToggleComplete(task.id)}

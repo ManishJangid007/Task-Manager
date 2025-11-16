@@ -327,17 +327,52 @@ const DailyView: React.FC<DailyViewProps> = ({ tasks, projects, onUpdateTask, on
                     </div>
                     {!isCollapsed && (
                       <div className="space-y-1 pl-4">
-                        {tasksByProject[projectId]
-                          .sort((a, b) => getPriorityOrder(a.priority) - getPriorityOrder(b.priority))
-                          .map(task => (
-                            <TaskItem
-                              key={task.id}
-                              task={task}
-                              onToggleComplete={handleToggleComplete}
-                              onDelete={onDeleteTask}
-                              onEdit={onEditTask}
-                            />
-                          ))}
+                        {(() => {
+                          const tasksForProject = tasksByProject[projectId];
+                          const parentTasks = tasksForProject.filter(t => !t.parentTaskId);
+                          const subtasksMap = new Map<string, Task[]>();
+                          
+                          // Group subtasks by parent
+                          tasksForProject.forEach(task => {
+                            if (task.parentTaskId) {
+                              if (!subtasksMap.has(task.parentTaskId)) {
+                                subtasksMap.set(task.parentTaskId, []);
+                              }
+                              subtasksMap.get(task.parentTaskId)!.push(task);
+                            }
+                          });
+                          
+                          // Sort parent tasks by priority
+                          const sortedParents = parentTasks.sort((a, b) => getPriorityOrder(a.priority) - getPriorityOrder(b.priority));
+                          
+                          // Render parent tasks with their subtasks
+                          return sortedParents.map(parentTask => {
+                            const subtasks = subtasksMap.get(parentTask.id) || [];
+                            const sortedSubtasks = subtasks.sort((a, b) => getPriorityOrder(a.priority) - getPriorityOrder(b.priority));
+                            
+                            return (
+                              <div key={parentTask.id}>
+                                <TaskItem
+                                  task={parentTask}
+                                  onToggleComplete={handleToggleComplete}
+                                  onDelete={onDeleteTask}
+                                  onEdit={onEditTask}
+                                  isSubtask={false}
+                                />
+                                {sortedSubtasks.map(subtask => (
+                                  <TaskItem
+                                    key={subtask.id}
+                                    task={subtask}
+                                    onToggleComplete={handleToggleComplete}
+                                    onDelete={onDeleteTask}
+                                    onEdit={onEditTask}
+                                    isSubtask={true}
+                                  />
+                                ))}
+                              </div>
+                            );
+                          });
+                        })()}
                       </div>
                     )}
                   </div>

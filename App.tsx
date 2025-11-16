@@ -320,19 +320,61 @@ function App() {
     setModalState(null);
   };
 
-  const handleProjectBatchCreateTasks = (projectId: string, newTasks: Array<{ title: string; date: string; priority: TaskPriority }>) => {
-    const tasksToAdd: Task[] = newTasks.map((t, i) => ({
-      id: `task_${Date.now()}_${i}`,
-      projectId: projectId,
-      title: t.title,
-      date: t.date,
-      isCompleted: false,
-      priority: t.priority,
-    }));
-
-    if (tasksToAdd.length > 0) {
-      setTasks(prevTasks => [...prevTasks, ...tasksToAdd]);
-      setNotification(`${tasksToAdd.length} task(s) added successfully!`);
+  const handleProjectBatchCreateTasks = (projectId: string, newTasks: Array<{ title: string; date: string; priority: TaskPriority; parentTaskId?: string }>) => {
+    const timestamp = Date.now();
+    const parentTasks: Task[] = [];
+    const subtasks: Array<{ title: string; date: string; priority: TaskPriority; parentTaskId: string }> = [];
+    
+    // Separate parent tasks and subtasks
+    newTasks.forEach((t, i) => {
+      if (t.parentTaskId && t.parentTaskId.startsWith('__parent_index_')) {
+        // This is a subtask with a temporary parent index
+        const parentIndex = parseInt(t.parentTaskId.replace('__parent_index_', '').replace('__', ''));
+        subtasks.push({
+          title: t.title,
+          date: t.date,
+          priority: t.priority,
+          parentTaskId: `__parent_index_${parentIndex}__`
+        });
+      } else if (!t.parentTaskId) {
+        // This is a parent task
+        parentTasks.push({
+          id: `task_${timestamp}_${i}`,
+          projectId: projectId,
+          title: t.title,
+          date: t.date,
+          isCompleted: false,
+          priority: t.priority,
+        });
+      }
+    });
+    
+    // Create a map from parent index to parent task ID
+    const parentIndexToId = new Map<number, string>();
+    parentTasks.forEach((task, index) => {
+      parentIndexToId.set(index, task.id);
+    });
+    
+    // Create subtasks with actual parent task IDs
+    const subtasksToAdd: Task[] = subtasks.map((st, i) => {
+      const parentIndex = parseInt(st.parentTaskId.replace('__parent_index_', '').replace('__', ''));
+      const parentId = parentIndexToId.get(parentIndex);
+      return {
+        id: `task_${timestamp}_sub_${i}`,
+        projectId: projectId,
+        title: st.title,
+        date: st.date,
+        isCompleted: false,
+        priority: st.priority,
+        parentTaskId: parentId,
+      };
+    });
+    
+    const allTasksToAdd = [...parentTasks, ...subtasksToAdd];
+    
+    if (allTasksToAdd.length > 0) {
+      setTasks(prevTasks => [...prevTasks, ...allTasksToAdd]);
+      setNotification(`${allTasksToAdd.length} task(s) added successfully!`);
     }
     setModalState(null);
   };
@@ -349,12 +391,26 @@ function App() {
     if (askForTaskDeleteConfirmation) {
       setDeleteDialog({ type: 'task', id: taskId });
     } else {
-      setTasks(tasks.filter(task => task.id !== taskId));
+      // Delete task and all its subtasks
+      const taskIdsToDelete = new Set([taskId]);
+      tasks.forEach(task => {
+        if (task.parentTaskId === taskId) {
+          taskIdsToDelete.add(task.id);
+        }
+      });
+      setTasks(tasks.filter(task => !taskIdsToDelete.has(task.id)));
     }
   };
 
   const confirmDeleteTask = (taskId: string) => {
-    setTasks(tasks.filter(task => task.id !== taskId));
+    // Delete task and all its subtasks
+    const taskIdsToDelete = new Set([taskId]);
+    tasks.forEach(task => {
+      if (task.parentTaskId === taskId) {
+        taskIdsToDelete.add(task.id);
+      }
+    });
+    setTasks(tasks.filter(task => !taskIdsToDelete.has(task.id)));
     setDeleteDialog(null);
   };
 
