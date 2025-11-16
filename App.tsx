@@ -303,19 +303,61 @@ function App() {
     }
   };
 
-  const handleBatchCreateTasks = (newTasks: Array<{ title: string; projectId: string; priority: TaskPriority }>) => {
-    const tasksToAdd: Task[] = newTasks.map((t, i) => ({
-      id: `task_${Date.now()}_${i}`,
-      projectId: t.projectId,
-      title: t.title,
-      date: getTodayDateString(),
-      isCompleted: false,
-      priority: t.priority,
-    }));
-
-    if (tasksToAdd.length > 0) {
-      setTasks(prevTasks => [...prevTasks, ...tasksToAdd]);
-      setNotification(`${tasksToAdd.length} task(s) added successfully!`);
+  const handleBatchCreateTasks = (newTasks: Array<{ title: string; projectId: string; priority: TaskPriority; parentTaskId?: string }>) => {
+    const timestamp = Date.now();
+    const parentTasks: Task[] = [];
+    const subtasks: Array<{ title: string; projectId: string; priority: TaskPriority; parentTaskId: string }> = [];
+    
+    // Separate parent tasks and subtasks
+    newTasks.forEach((t, i) => {
+      if (t.parentTaskId && t.parentTaskId.startsWith('__parent_index_')) {
+        // This is a subtask with a temporary parent index
+        const parentIndex = parseInt(t.parentTaskId.replace('__parent_index_', '').replace('__', ''));
+        subtasks.push({
+          title: t.title,
+          projectId: t.projectId,
+          priority: t.priority,
+          parentTaskId: `__parent_index_${parentIndex}__`
+        });
+      } else if (!t.parentTaskId) {
+        // This is a parent task
+        parentTasks.push({
+          id: `task_${timestamp}_${i}`,
+          projectId: t.projectId,
+          title: t.title,
+          date: getTodayDateString(),
+          isCompleted: false,
+          priority: t.priority,
+        });
+      }
+    });
+    
+    // Create a map from parent index to parent task ID
+    const parentIndexToId = new Map<number, string>();
+    parentTasks.forEach((task, index) => {
+      parentIndexToId.set(index, task.id);
+    });
+    
+    // Create subtasks with actual parent task IDs
+    const subtasksToAdd: Task[] = subtasks.map((st, i) => {
+      const parentIndex = parseInt(st.parentTaskId.replace('__parent_index_', '').replace('__', ''));
+      const parentId = parentIndexToId.get(parentIndex);
+      return {
+        id: `task_${timestamp}_sub_${i}`,
+        projectId: st.projectId,
+        title: st.title,
+        date: getTodayDateString(),
+        isCompleted: false,
+        priority: st.priority,
+        parentTaskId: parentId,
+      };
+    });
+    
+    const allTasksToAdd = [...parentTasks, ...subtasksToAdd];
+    
+    if (allTasksToAdd.length > 0) {
+      setTasks(prevTasks => [...prevTasks, ...allTasksToAdd]);
+      setNotification(`${allTasksToAdd.length} task(s) added successfully!`);
     }
     setModalState(null);
   };

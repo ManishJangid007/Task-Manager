@@ -6,7 +6,7 @@ import { Select } from './ui/select';
 
 interface BatchTaskModalProps {
   projects: Project[];
-  onSubmit: (tasks: Array<{ title: string; projectId: string; priority: TaskPriority }>) => void;
+  onSubmit: (tasks: Array<{ title: string; projectId: string; priority: TaskPriority; parentTaskId?: string }>) => void;
   onCancel: () => void;
 }
 
@@ -15,6 +15,7 @@ type TaskRow = {
   title: string;
   projectId: string;
   priority: TaskPriority;
+  parentTaskId?: number; // ID of parent row (for subtasks)
 };
 
 const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onCancel }) => {
@@ -42,26 +43,101 @@ const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onC
     { value: 'low', label: 'Low', icon: getPriorityIcon('low') },
   ];
 
-  useEffect(() => {
-    // Focus the last input when a new row is added
-    if (inputsRef.current.length > 0) {
-      const lastInput = inputsRef.current[inputsRef.current.length - 1];
-      lastInput?.focus();
-    }
-  }, [taskRows.length]);
+  // Removed useEffect - focus is now handled in handleAddRow when inserting at specific index
 
-  const handleAddRow = () => {
-    // Don't add a new row if the last row's title is empty
-    if (taskRows.length > 0) {
-      const lastRow = taskRows[taskRows.length - 1];
-      if (!lastRow.title.trim()) {
+  const handleAddRow = (preserveSubtaskStatus = false, insertAfterIndex?: number, explicitParentTaskId?: number) => {
+    const targetIndex = insertAfterIndex !== undefined ? insertAfterIndex : taskRows.length - 1;
+    const targetRow = taskRows[targetIndex];
+    
+    // Don't add a new row if the target row's title is empty
+    if (targetRow && !targetRow.title.trim()) {
+      return;
+    }
+    
+    const lastProject = targetRow?.projectId || projects[0]?.id || '';
+    const lastPriority = targetRow?.priority || 'medium';
+    
+    // Create new row
+    const newRow: TaskRow = {
+      id: Date.now(),
+      title: '',
+      projectId: lastProject,
+      priority: lastPriority,
+    };
+    
+    // Determine parent task ID
+    if (explicitParentTaskId !== undefined) {
+      // Explicit parent task ID provided (e.g., when parent has subtasks)
+      newRow.parentTaskId = explicitParentTaskId;
+    } else if (preserveSubtaskStatus && targetRow?.parentTaskId) {
+      // Preserve the same parent task ID for the new subtask
+      newRow.parentTaskId = targetRow.parentTaskId;
+    }
+    
+    if (insertAfterIndex !== undefined) {
+      // Insert after the specified index
+      const newRows = [...taskRows];
+      newRows.splice(insertAfterIndex + 1, 0, newRow);
+      setTaskRows(newRows);
+      // Focus the newly inserted input after state update
+      // Use requestAnimationFrame to ensure DOM has updated
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          const insertedIndex = insertAfterIndex + 1;
+          if (inputsRef.current[insertedIndex]) {
+            inputsRef.current[insertedIndex].focus();
+          }
+        }, 0);
+      });
+    } else {
+      // Add at the end
+      setTaskRows([...taskRows, newRow]);
+      // Focus the last input when adding at the end
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          if (inputsRef.current.length > 0) {
+            const lastInput = inputsRef.current[inputsRef.current.length - 1];
+            lastInput?.focus();
+          }
+        }, 0);
+      });
+    }
+  };
+
+  const handleMakeSubtask = (rowIndex: number) => {
+    if (rowIndex === 0) return; // Can't make first row a subtask
+    
+    const currentRow = taskRows[rowIndex];
+    
+    // If already a subtask (has any parent), unindent it
+    if (currentRow.parentTaskId) {
+      // Find the parent row to get its project
+      const parentRow = taskRows.find(r => r.id === currentRow.parentTaskId);
+      setTaskRows(taskRows.map((row, idx) => 
+        idx === rowIndex ? { ...row, parentTaskId: undefined, projectId: parentRow?.projectId || row.projectId } : row
+      ));
+    } else {
+      // Find the nearest parent task (not a subtask) in the previous rows
+      let parentRowIndex = -1;
+      for (let i = rowIndex - 1; i >= 0; i--) {
+        if (!taskRows[i].parentTaskId) {
+          // Found a parent task (not a subtask)
+          parentRowIndex = i;
+          break;
+        }
+      }
+      
+      if (parentRowIndex === -1) {
+        // No parent task found, can't make it a subtask
         return;
       }
+      
+      const parentRow = taskRows[parentRowIndex];
+      // Make it a subtask of the found parent task
+      setTaskRows(taskRows.map((row, idx) => 
+        idx === rowIndex ? { ...row, parentTaskId: parentRow.id, projectId: parentRow.projectId } : row
+      ));
     }
-    const lastRow = taskRows.length > 0 ? taskRows[taskRows.length - 1] : null;
-    const lastProject = lastRow?.projectId || projects[0]?.id || '';
-    const lastPriority = lastRow?.priority || 'medium';
-    setTaskRows([...taskRows, { id: Date.now(), title: '', projectId: lastProject, priority: lastPriority }]);
   };
 
   const handleRemoveRow = (id: number) => {
@@ -69,7 +145,37 @@ const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onC
     if (taskRows.length <= 1) {
       return;
     }
-    setTaskRows(taskRows.filter(row => row.id !== id));
+    
+    const rowToDelete = taskRows.find(row => row.id === id);
+    if (!rowToDelete) {
+      return;
+    }
+    
+    // Check if this is a parent task (not a subtask)
+    const isParentTask = !rowToDelete.parentTaskId;
+    
+    if (isParentTask) {
+      // Count remaining parent tasks after deletion
+      const remainingParentTasks = taskRows.filter(row => 
+        row.id !== id && !row.parentTaskId
+      );
+      
+      // Prevent deleting if this would be the last parent task
+      if (remainingParentTasks.length === 0) {
+        return;
+      }
+    }
+    
+    // Find all subtasks of this row
+    const subtaskIds = new Set([id]);
+    taskRows.forEach(row => {
+      if (row.parentTaskId === id) {
+        subtaskIds.add(row.id);
+      }
+    });
+    
+    // Remove the row and all its subtasks
+    setTaskRows(taskRows.filter(row => !subtaskIds.has(row.id)));
   };
 
   const handleRowChange = (id: number, field: 'title' | 'projectId' | 'priority', value: string) => {
@@ -79,12 +185,48 @@ const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onC
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>, rowIndex: number) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      handleMakeSubtask(rowIndex);
+    } else if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault(); // Always prevent default to avoid newline
       const currentRow = taskRows[rowIndex];
       if (currentRow.title.trim()) {
-        // Only add a new row if the current row's title is not empty
-        handleAddRow();
+        // Check if current row is a parent task with subtasks
+        const subtasks = taskRows.filter(row => row.parentTaskId === currentRow.id);
+        const hasSubtasks = subtasks.length > 0;
+        
+        // Determine if new row should be a subtask and where to insert
+        let shouldBeSubtask = false;
+        let parentTaskId: number | undefined = undefined;
+        let insertIndex = rowIndex;
+        
+        if (currentRow.parentTaskId) {
+          // Current row is already a subtask, preserve that status
+          shouldBeSubtask = true;
+          parentTaskId = currentRow.parentTaskId;
+          insertIndex = rowIndex; // Insert right after current subtask
+        } else if (hasSubtasks) {
+          // Current row is a parent with subtasks, add as subtask
+          shouldBeSubtask = true;
+          parentTaskId = currentRow.id;
+          // Find the last subtask of this parent and insert after it
+          let lastSubtaskIndex = -1;
+          for (let i = taskRows.length - 1; i >= 0; i--) {
+            if (taskRows[i].parentTaskId === currentRow.id) {
+              lastSubtaskIndex = i;
+              break;
+            }
+          }
+          if (lastSubtaskIndex !== -1) {
+            insertIndex = lastSubtaskIndex;
+          } else {
+            insertIndex = rowIndex; // Fallback: insert after parent
+          }
+        }
+        
+        // Insert the new row at the calculated index
+        handleAddRow(shouldBeSubtask, insertIndex, parentTaskId);
       } else {
         // If empty, submit the form
         const form = e.currentTarget.closest('form');
@@ -99,9 +241,41 @@ const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onC
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const tasksToSubmit = taskRows
-      .filter(row => row.title.trim() !== '' && row.projectId)
-      .map(row => ({ title: row.title, projectId: row.projectId, priority: row.priority }));
+    // Filter valid rows and prepare for submission
+    // We'll submit parent tasks first, then subtasks
+    const validRows = taskRows.filter(row => row.title.trim() !== '' && row.projectId);
+    const parentRows = validRows.filter(row => !row.parentTaskId);
+    const subtaskRows = validRows.filter(row => row.parentTaskId);
+    
+    // Create a map from row ID to parent row index
+    const rowIdToParentIndex = new Map<number, number>();
+    parentRows.forEach((parentRow, index) => {
+      rowIdToParentIndex.set(parentRow.id, index);
+    });
+    
+    // Submit parent tasks first
+    const tasksToSubmit: Array<{ title: string; projectId: string; priority: TaskPriority; parentTaskId?: string }> = [];
+    parentRows.forEach(row => {
+      tasksToSubmit.push({ 
+        title: row.title, 
+        projectId: row.projectId, 
+        priority: row.priority 
+      });
+    });
+    
+    // Submit subtasks with temporary parent index (will be resolved in App.tsx)
+    subtaskRows.forEach(row => {
+      const parentIndex = rowIdToParentIndex.get(row.parentTaskId!);
+      if (parentIndex !== undefined) {
+        tasksToSubmit.push({ 
+          title: row.title, 
+          projectId: row.projectId, 
+          priority: row.priority,
+          parentTaskId: `__parent_index_${parentIndex}__` // Temporary marker
+        });
+      }
+    });
+    
     onSubmit(tasksToSubmit);
   };
 
@@ -123,65 +297,97 @@ const BatchTaskModal: React.FC<BatchTaskModalProps> = ({ projects, onSubmit, onC
   return (
     <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 flex flex-col h-full">
       <div className="flex-1 overflow-y-auto pr-2 space-y-3 sm:space-y-4 min-h-0">
-        {taskRows.map((row, index) => (
-          <div key={row.id} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-            <div className="flex-1 sm:flex-none sm:w-1/4">
-              <Combobox
-                value={row.projectId}
-                onChange={(value) => handleRowChange(row.id, 'projectId', value)}
-                options={projects.map(p => ({ value: p.id, label: p.name }))}
-                placeholder="Select project..."
-                searchPlaceholder="Search projects..."
-                className="w-full"
+        {taskRows.map((row, index) => {
+          const isSubtask = !!row.parentTaskId;
+          return (
+            <div key={row.id} className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 ${isSubtask ? 'pl-4 sm:pl-6' : ''}`}>
+              {!isSubtask && (
+                <div className="flex-1 sm:flex-none sm:w-1/4">
+                  <Combobox
+                    value={row.projectId}
+                    onChange={(value) => handleRowChange(row.id, 'projectId', value)}
+                    options={projects.map(p => ({ value: p.id, label: p.name }))}
+                    placeholder="Select project..."
+                    searchPlaceholder="Search projects..."
+                    className="w-full"
+                  />
+                </div>
+              )}
+              {isSubtask && <div className="flex-1 sm:flex-none sm:w-1/4" />}
+              <textarea
+                ref={el => { inputsRef.current[index] = el; }}
+                placeholder={isSubtask ? "Subtask (Tab: unindent)" : "Task (Tab: subtask)"}
+                value={row.title}
+                onChange={(e) => handleRowChange(row.id, 'title', e.target.value)}
+                onKeyDown={(e) => handleKeyDown(e, index)}
+                rows={1}
+                className="flex-1 px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-sm bg-card border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-foreground resize-none min-h-[2.5rem] sm:min-h-[2.25rem]"
+                style={{ height: 'auto' }}
+                onInput={(e) => {
+                  const target = e.target as HTMLTextAreaElement;
+                  target.style.height = 'auto';
+                  target.style.height = `${target.scrollHeight}px`;
+                }}
               />
+              <div className="flex-1 sm:flex-none sm:w-1/4">
+                <Select
+                  value={row.priority}
+                  onChange={(value) => handleRowChange(row.id, 'priority', value as TaskPriority)}
+                  options={priorityOptions}
+                  placeholder="Priority..."
+                  className="w-full h-9"
+                  showIconInField={true}
+                  showIconInDropdown={true}
+                  iconOnlyInField={false}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => handleRemoveRow(row.id)}
+                disabled={(() => {
+                  if (taskRows.length <= 1) return true;
+                  // Check if this is the last parent task
+                  const isParentTask = !row.parentTaskId;
+                  if (isParentTask) {
+                    const remainingParentTasks = taskRows.filter(r => r.id !== row.id && !r.parentTaskId);
+                    return remainingParentTasks.length === 0;
+                  }
+                  return false;
+                })()}
+                className={`self-start sm:self-auto px-3 py-2.5 sm:px-2 sm:py-1 rounded-md transition-colors ${(() => {
+                  if (taskRows.length <= 1) return 'text-foreground/20 cursor-not-allowed opacity-50';
+                  const isParentTask = !row.parentTaskId;
+                  if (isParentTask) {
+                    const remainingParentTasks = taskRows.filter(r => r.id !== row.id && !r.parentTaskId);
+                    if (remainingParentTasks.length === 0) return 'text-foreground/20 cursor-not-allowed opacity-50';
+                  }
+                  return 'text-foreground/60 hover:text-destructive hover:bg-muted';
+                })()}`}
+                aria-label="Remove task"
+                title={(() => {
+                  if (taskRows.length <= 1) return 'At least one task row is required';
+                  const isParentTask = !row.parentTaskId;
+                  if (isParentTask) {
+                    const remainingParentTasks = taskRows.filter(r => r.id !== row.id && !r.parentTaskId);
+                    if (remainingParentTasks.length === 0) return 'Cannot delete the last parent task';
+                  }
+                  return 'Remove task';
+                })()}
+              >
+                <TrashIcon className="w-5 h-5" />
+              </button>
             </div>
-            <textarea
-              ref={el => { inputsRef.current[index] = el; }}
-              placeholder="Task title..."
-              value={row.title}
-              onChange={(e) => handleRowChange(row.id, 'title', e.target.value)}
-              onKeyDown={(e) => handleKeyDown(e, index)}
-              rows={1}
-              className="flex-1 px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-sm bg-card border border-border rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-foreground resize-none min-h-[2.5rem] sm:min-h-[2.25rem]"
-              style={{ height: 'auto' }}
-              onInput={(e) => {
-                const target = e.target as HTMLTextAreaElement;
-                target.style.height = 'auto';
-                target.style.height = `${target.scrollHeight}px`;
-              }}
-            />
-            <div className="flex-1 sm:flex-none sm:w-1/4">
-              <Select
-                value={row.priority}
-                onChange={(value) => handleRowChange(row.id, 'priority', value as TaskPriority)}
-                options={priorityOptions}
-                placeholder="Priority..."
-                className="w-full h-9"
-                showIconInField={true}
-                showIconInDropdown={true}
-                iconOnlyInField={false}
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => handleRemoveRow(row.id)}
-              disabled={taskRows.length <= 1}
-              className={`self-start sm:self-auto px-3 py-2.5 sm:px-2 sm:py-1 rounded-md transition-colors ${taskRows.length <= 1
-                ? 'text-foreground/20 cursor-not-allowed opacity-50'
-                : 'text-foreground/60 hover:text-destructive hover:bg-muted'
-                }`}
-              aria-label="Remove task"
-              title={taskRows.length <= 1 ? 'At least one task row is required' : 'Remove task'}
-            >
-              <TrashIcon className="w-5 h-5" />
-            </button>
-          </div>
-        ))}
+          );
+        })}
       </div>
       <div className="flex-shrink-0 space-y-4">
         <button
           type="button"
-          onClick={handleAddRow}
+          onClick={() => {
+            const lastRow = taskRows[taskRows.length - 1];
+            const isSubtask = !!lastRow?.parentTaskId;
+            handleAddRow(isSubtask, taskRows.length - 1, lastRow?.parentTaskId);
+          }}
           disabled={taskRows.length > 0 && !taskRows[taskRows.length - 1].title.trim()}
           className={`w-full flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-2 text-sm font-medium rounded-md transition-colors ${taskRows.length > 0 && !taskRows[taskRows.length - 1].title.trim()
             ? 'text-foreground/40 bg-muted/50 cursor-not-allowed opacity-50'
