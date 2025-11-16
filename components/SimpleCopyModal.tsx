@@ -47,14 +47,52 @@ const SimpleCopyModal: React.FC<SimpleCopyModalProps> = ({ tasks, date, onCopy, 
         for (const projectId in tasksByProject) {
             const projectName = getProjectName(projectId);
             content += `    ${projectName}\n`;
-            tasksByProject[projectId].forEach(task => {
-                if (format === 'withStatus') {
-                    const status = task.isCompleted ? 'DONE' : 'WIP';
-                    content += `       - ${task.title} - ${status}\n`;
-                } else {
-                    content += `       - ${task.title}\n`;
+            
+            // Group tasks by parent/subtask relationship
+            const projectTasks = tasksByProject[projectId];
+            const parentTasks = projectTasks.filter(t => !t.parentTaskId);
+            const subtasksMap = new Map<string, Task[]>();
+            
+            projectTasks.forEach(task => {
+                if (task.parentTaskId) {
+                    if (!subtasksMap.has(task.parentTaskId)) {
+                        subtasksMap.set(task.parentTaskId, []);
+                    }
+                    subtasksMap.get(task.parentTaskId)!.push(task);
                 }
             });
+
+            // Sort parent tasks by priority
+            const sortedParents = [...parentTasks].sort((a, b) => {
+                const priorityOrder = { high: 0, medium: 1, low: 2 };
+                return (priorityOrder[a.priority || 'medium']) - (priorityOrder[b.priority || 'medium']);
+            });
+
+            sortedParents.forEach(parentTask => {
+                if (format === 'withStatus') {
+                    const status = parentTask.isCompleted ? 'DONE' : 'WIP';
+                    content += `       - ${parentTask.title} - ${status}\n`;
+                } else {
+                    content += `       - ${parentTask.title}\n`;
+                }
+
+                // Add subtasks with extra indentation
+                const subtasks = subtasksMap.get(parentTask.id) || [];
+                const sortedSubtasks = [...subtasks].sort((a, b) => {
+                    const priorityOrder = { high: 0, medium: 1, low: 2 };
+                    return (priorityOrder[a.priority || 'medium']) - (priorityOrder[b.priority || 'medium']);
+                });
+
+                sortedSubtasks.forEach(subtask => {
+                    if (format === 'withStatus') {
+                        const status = subtask.isCompleted ? 'DONE' : 'WIP';
+                        content += `          - ${subtask.title} - ${status}\n`;
+                    } else {
+                        content += `          - ${subtask.title}\n`;
+                    }
+                });
+            });
+            
             content += `\n`;
         }
 

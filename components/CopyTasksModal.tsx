@@ -49,13 +49,48 @@ const CopyTasksModal: React.FC<CopyTasksModalProps> = ({ tasks, date, onCopy, on
                 }
             }
 
+            // Group tasks by parent/subtask relationship
+            const parentTasks = tasks.filter(t => !t.parentTaskId);
+            const subtasksMap = new Map<string, Task[]>();
+            
             tasks.forEach(task => {
-                if (format === 'normal') {
-                    content += `    - ${task.title}\n`;
-                } else if (format === 'withStatus') {
-                    const status = task.isCompleted ? 'DONE' : 'WIP';
-                    content += `     - ${task.title} - ${status}\n`;
+                if (task.parentTaskId) {
+                    if (!subtasksMap.has(task.parentTaskId)) {
+                        subtasksMap.set(task.parentTaskId, []);
+                    }
+                    subtasksMap.get(task.parentTaskId)!.push(task);
                 }
+            });
+
+            // Sort parent tasks by priority
+            const sortedParents = [...parentTasks].sort((a, b) => {
+                const priorityOrder = { high: 0, medium: 1, low: 2 };
+                return (priorityOrder[a.priority || 'medium']) - (priorityOrder[b.priority || 'medium']);
+            });
+
+            sortedParents.forEach(parentTask => {
+                if (format === 'normal') {
+                    content += `    - ${parentTask.title}\n`;
+                } else if (format === 'withStatus') {
+                    const status = parentTask.isCompleted ? 'DONE' : 'WIP';
+                    content += `     - ${parentTask.title} - ${status}\n`;
+                }
+
+                // Add subtasks with extra indentation
+                const subtasks = subtasksMap.get(parentTask.id) || [];
+                const sortedSubtasks = [...subtasks].sort((a, b) => {
+                    const priorityOrder = { high: 0, medium: 1, low: 2 };
+                    return (priorityOrder[a.priority || 'medium']) - (priorityOrder[b.priority || 'medium']);
+                });
+
+                sortedSubtasks.forEach(subtask => {
+                    if (format === 'normal') {
+                        content += `        - ${subtask.title}\n`;
+                    } else if (format === 'withStatus') {
+                        const status = subtask.isCompleted ? 'DONE' : 'WIP';
+                        content += `         - ${subtask.title} - ${status}\n`;
+                    }
+                });
             });
         }
 
